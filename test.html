@@ -1,0 +1,468 @@
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/placeholder-loading/dist/css/placeholder-loading.min.css">
+    <div x-data="xData()" class="flex flex-col items-center justify-center">
+        <div class="w-full px-5">
+            <div class="flex min-w-full flex-col text-sm">
+                <div class="flex sm:-mx-6 lg:-mx8 p-4 border rounded-lg">
+                    <div class="inline-block min-w-full">
+                        <!--Loading-->
+                        <div x-show="isLoading" x-transition>
+                            <div class="ph-row mt-0">
+                                <template x-for="n in 10">
+                                    <div class="ph-col-12 big ph-item"
+                                        style="margin: 5px !important;border-radius: 10px !important;"></div>
+                                </template>
+                            </div>
+                        </div>
+                        <!--Loading-->
+                        <!--Konten Atas-->
+                        <div class="mb-3 text-xl font-bold">
+                            <h2>DAFTAR TRANSAKSI MEMBER</h2>
+                        </div>
+                        <div class="grid grid-cols-12 items-center self-center mb-6">
+                            <div class="col-span-11">
+                                <div class="flex gap-2 self-center">
+                                    <p class="text-base font-semibold self-center">Search :</p>
+                                    <input type="text" class="border border-[#D4D4D4] rounded-lg p-2 w-80"
+                                        placeholder="Search" x-model="searching" @input="hasilpencarian()">
+                                    <!-- <button
+                                        class="rounded-lg ring-1 ring-slate-400 bg-gray-300 px-4 py-1 text-black font-medium hover:bg-gray-200 hover:ring-white hover:text-blue-400">
+                                        Search
+                                    </button> -->
+                                </div>
+                            </div>
+                            <div class="col-span-1 text-center">
+                                <button
+                                    class="rounded-lg ring-1 ring-slate-400 bg-gray-300 px-4 py-1 text-black font-medium hover:bg-gray-200 hover:ring-white hover:text-blue-400"
+                                    style="height: 35px;" @click="addNew = true">
+                                    Add New
+                                </button>
+                            </div>
+                        </div>
+                        <!--Akhir Konten Atas-->
+                        <!--Modal Add New-->
+                        <div class="fixed inset-0 bg-black bg-opacity-50 overflow-auto flex flex-wrap py-4 z-[1] justify-center items-center"
+                            x-show="addNew">
+                            <div class="bg-white rounded-lg w-6/12">
+                                <div class="flex justify-between items-center border-b">
+                                    <div class="p-4">
+                                        <p class="text-xl font-medium">Add New Data</p>
+                                        <span class="text-slate-400">Please fill out the form below!</span>
+                                    </div>
+                                    <div @click="addNew = false; insertdata = {};" class="m-4 cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <form action="" class="grid grid-cols-6 gap-4 p-4" autocomplete="off"
+                                    @submit.prevent="addData(insertdata); addNew = false;">
+                                    <div class="col-span-6 flex items-center gap-4">
+                                        <label for="title" class="font-medium w-1/6">
+                                            Title<span class="text-red-600">*</span>
+                                        </label>
+                                        <input type="text" name="title" id="title" class="border rounded-lg p-2 w-3/6"
+                                            x-model="insertdata.title" required>
+                                    </div>
+                                    <div class="col-span-6 flex items-center gap-4">
+                                        <label for="description" class="font-medium w-1/6">
+                                            Description
+                                        </label>
+                                        <textarea name="description" id="description" rows="3"
+                                            class="border rounded-lg p-2 w-3/6"
+                                            x-model="insertdata.description"></textarea>
+                                    </div>
+                                    <div class="col-span-6 flex items-center gap-4">
+                                        <label for="member_name" class="font-medium w-1/6">
+                                            Member<span class="text-red-600">*</span>
+                                        </label>
+                                        <select name="member_name" id="member_name" class="border rounded-lg p-2 w-3/6"
+                                            x-model="insertdata.member_id" required>
+                                            <option value="" selected disabled></option>
+                                            <template x-for="data in datamember">
+                                                <option :value="data.id" x-text="data.member_name"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div class="col-span-6 flex items-center gap-4">
+                                        <label for="is_enable" class="font-medium w-1/6">
+                                            Enable
+                                        </label>
+                                        <input type="checkbox" name="is_enable" id="is_enable"
+                                            x-model="insertdata.is_enable">
+                                    </div>
+                                    <div class="col-span-6 flex items-center">
+                                        <div class="w-1/7 bg-gray-400 rounded-xl mr-3"
+                                            @click="addNew = false; insertdata = {};">
+                                            <p class="text-black text-center font-semibold py-2 px-5">Close</p>
+                                        </div>
+                                        <button class="w-1/7 bg-[#f1cf68] rounded-xl">
+                                            <p class="text-black text-center font-semibold py-2 px-5">Create</p>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <!--Akhir Modal Add New-->
+                        <!--Modal Edit Form-->
+                        <div class="fixed inset-0 bg-black bg-opacity-50 overflow-auto flex flex-wrap py-4 z-[1] justify-center items-center"
+                            x-show="editForm">
+                            <div class="bg-white rounded-lg w-6/12">
+                                <div class="flex justify-between items-center border-b">
+                                    <div class="p-4">
+                                        <p class="text-xl font-medium">Edit Data</p>
+                                        <span class="text-slate-400">Please fill out the form
+                                            below!</span>
+                                    </div>
+                                    <div @click="editForm = false; editdata = {};" class="m-4 cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <form action="" class="grid grid-cols-6 gap-4 p-4" autocomplete="off"
+                                    @submit.prevent="updateData(editdata); editForm = false;">
+                                    <div class="col-span-6 flex items-center gap-4">
+                                        <label for="title" class="font-medium w-1/6">
+                                            Title <span class="text-red-600">*</span>
+                                        </label>
+                                        <input type="text" name="title" id="title" class="border rounded-lg p-2 w-3/6"
+                                            x-model="editdata.title" required>
+                                    </div>
+                                    <div class="col-span-6 flex items-center gap-4">
+                                        <label for="description" class="font-medium w-1/6">
+                                            Description
+                                        </label>
+                                        <textarea name="description" id="description" rows="3"
+                                            class="border rounded-lg p-2 w-3/6"
+                                            x-model="editdata.description"></textarea>
+                                    </div>
+                                    <div class="col-span-6 flex items-center gap-4">
+                                        <label for="member_name" class="font-medium w-1/6">
+                                            Member
+                                        </label>
+                                        <select name="member_name" id="member_name" class="border rounded-lg p-2 w-3/6"
+                                            x-model="editdata.member_id" required>
+                                            <option value="" selected disabled></option>
+                                            <template x-for="data in datamember">
+                                                <option :value="data.id" x-text="data.member_name"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div class="col-span-6 flex items-center gap-4">
+                                        <label for="is_enable" class="font-medium w-1/6">
+                                            Enable
+                                        </label>
+                                        <input type="checkbox" name="is_enable" id="is_enable"
+                                            x-bind:checked="editdata.is_enable">
+                                    </div>
+
+                                    <div class="col-span-6 flex items-center">
+                                        <div class="w-1/7 bg-gray-400 rounded-xl mr-3"
+                                            @click="editForm = false; editdata = {};">
+                                            <p class="text-black text-center font-semibold py-2 px-5">
+                                                Close</p>
+                                        </div>
+                                        <button class="w-1/7 bg-[#f1cf68] rounded-xl">
+                                            <p class="text-black text-center font-semibold py-2 px-5">
+                                                Update</p>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <!--Akhir Modal Edit Form-->
+                        <!--Data Tabel-->
+                        <div class="overflow-auto border border-[#D4D4D4] rounded-xl">
+                            <table class="min-w-full">
+                                <thead class="text-base font-semibold text-center">
+                                    <tr class="bg-[#ebebeb]">
+                                        <th scope="col" class="py-2 whitespace-nowrap border">
+                                            No
+                                        </th>
+                                        <th scope="col" class="py-2 whitespace-nowrap border">
+                                            Title
+                                        </th>
+                                        <th scope="col" class="py-2 whitespace-nowrap border">
+                                            Description
+                                        </th>
+                                        <th scope="col" class="py-2 whitespace-nowrap border">
+                                            Member Name
+                                        </th>
+                                        <th scope="col" class="py-2 whitespace-nowrap border">
+                                            Enable
+                                        </th>
+                                        <th scope="col" class="py-2 whitespace-nowrap border">
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm font-normal">
+                                    <template x-for="(data, index) in hasil" :key="index">
+                                        <tr>
+                                            <td x-text="index + 1" class="p-2 whitespace-nowrap text-center border">
+                                            </td>
+                                            <td x-text="data.title" class="p-2 whitespace-nowrap text-start border">
+                                            </td>
+                                            <td x-text="data.description "
+                                                class="p-2 whitespace-nowrap text-start border"></td>
+                                            <td x-text="data.member_name"
+                                                class="p-2 whitespace-nowrap text-start border"></td>
+                                            <td x-text="data.is_enable" class="p-2 whitespace-nowrap border"></td>
+                                            <td class="p-2 whitespace-nowrap border text-center">
+                                                <button
+                                                    class="text-center text-blue-500 transition duration-500 ease-in-out hover:scale-125"
+                                                    @click="editForm = true; editData(data.id, data.title, data.description, data.member_id, data.is_enable)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="w-6 h-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    class="text-center text-red-500 transition duration-500 ease-in-out hover:scale-125"
+                                                    @click="deleteData(data.id)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="w-6 h-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!--Akhir Data Tabel-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function xData() {
+            return {
+                token: localStorage.getItem("ads_token"),
+                user: JSON.parse(localStorage.getItem("user")),
+                hasil: [],
+                hasilsementara: [],
+                datamember: [],
+                searching: '',
+                addNew: false,
+                editForm: false,
+                insertdata: {
+                    title: '',
+                    description: '',
+                    member_id: '',
+                    is_enable: ''
+                },
+                editdata: {
+                    id: '',
+                    title: '',
+                    description: '',
+                    member_id: '',
+                    is_enable: ''
+                },
+                deletedata: {
+                    id: ''
+                },
+                isLoading: false,
+                async getData() {
+                    try {
+                        this.isLoading = true
+
+                        const idApi = 1123
+                        const url = `/api/global-api-tunnel-get?id_api=${idApi}`
+
+                        const res = await fetch(url)
+                        const data = await res.json()
+
+                        if (!res.ok) throw new Error(data.message)
+                        this.hasil = data.data
+                        this.hasilsementara = data.data
+                        console.log(this.hasil);
+                    } catch (error) {
+                        console.log(error);
+                    } finally {
+                        this.isLoading = false
+                    }
+
+                },
+                async getMember() {
+                    const idApi = 1124
+                    const url = `/api/global-api-tunnel-get?id_api=${idApi}`
+
+                    const res = await fetch(url)
+                    const data = await res.json()
+
+                    if (!res.ok) throw new Error(data.message)
+                    this.datamember = data.data
+                },
+                hasilpencarian() {
+                    let search = this.searching ? this.searching.toLowerCase() : '';
+                    let hasilpencarian = this.hasilsementara
+
+                    let filter = hasilpencarian.filter(
+                        (i) =>
+                            i.member_name.toLowerCase().includes(search) ||
+                            i.title.toLowerCase().includes(search) ||
+                            i.description.toLowerCase().includes(search) ||
+                            i.is_enable.toLowerCase().includes(search)
+                    )
+                    this.hasil = filter
+                },
+                async addData() {
+                    try {
+                        this.isLoading = true
+
+                        let insertdata = {
+                            title: this.insertdata.title,
+                            description: this.insertdata.description,
+                            member_id: this.insertdata.member_id,
+                            is_enable: this.insertdata.is_enable ? 1 : 0,
+                        };
+                        console.log("hasil", insertdata);
+                        let insertby = this.user.username
+                        console.log(insertby)
+
+                        const formData = new FormData();
+                        formData.append("insertdata", JSON.stringify(insertdata));
+                        formData.append("insert_by", insertby);
+
+                        const idApi = 1127;
+                        const url = `https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=${idApi}`;
+
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token,
+                            },
+                            body: formData
+                        });
+                        if (!res.ok) {
+                            throw new Error('failed submit request');
+                        }
+                        swal({
+                            title: 'Data Berhasil Ditambahkan!',
+                            icon: 'success'
+                        }).then((response) => {
+                            this.getData()
+                        });
+                    } catch (error) {
+                        console.log(error);
+                    } finally {
+                        this.isLoading = false
+                    }
+                },
+                async editData(id, title, description, member_id, is_enable) {
+                    this.editdata.id = id
+                    this.editdata.title = title
+                    this.editdata.description = description
+                    this.editdata.member_id = member_id
+                    if (is_enable === 'Yes') {
+                        this.editdata.is_enable = true;
+                    } else {
+                        this.editdata.is_enable = false;
+                    }
+
+                },
+                async updateData() {
+                    try {
+                        this.isLoading = true
+                        let updatedata = {
+                            id: this.editdata.id,
+                            title: this.editdata.title,
+                            description: this.editdata.description,
+                            member_id: this.editdata.member_id,
+                            is_enable: this.editdata.is_enable ? 1 : 0
+                        }
+                        let updateby = this.user.username
+
+                        const formData = new FormData();
+                        formData.append("updatedata", JSON.stringify(updatedata));
+                        formData.append("update_by", updateby);
+
+                        const idApi = 1132;
+                        const url = `https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=${idApi}`;
+
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token,
+                            },
+                            body: formData
+                        });
+                        if (!res.ok) {
+                            throw new Error('failed submit request');
+                        }
+                        swal({
+                            title: 'Data Berhasil Diupdate!',
+                            icon: 'success'
+                        }).then((response) => {
+                            this.getData()
+                        });
+                    }
+                    catch (error) {
+                        console.log(error);
+                    } finally {
+                        this.isLoading = false
+                    }
+                },
+                async deleteData(id) {
+                    try {
+                        this.isLoading = true
+                        this.deletedata.id = id
+                        let deletedata = {
+                            id: this.deletedata.id
+                        }
+
+                        let deleteby = this.user.username
+
+                        const formData = new FormData();
+                        formData.append("deletedata", JSON.stringify(deletedata));
+                        formData.append("delete_by", deleteby);
+
+                        const idApi = 1130;
+                        const url = `https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=${idApi}`;
+
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token,
+                            },
+                            body: formData
+                        });
+                        if (!res.ok) {
+                            throw new Error('failed submit request');
+                        }
+                        swal({
+                            title: 'Data Berhasil Dihapus!',
+                            icon: 'success'
+                        }).then((response) => {
+                            this.getData()
+                        });
+                    } catch (error) {
+                        console.log(error);
+                    } finally {
+                        this.isLoading = false
+                    }
+                },
+                init() {
+                    this.getData();
+                    this.getMember();
+                },
+            }
+        }
+    </script>
+</body>

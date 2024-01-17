@@ -1,0 +1,526 @@
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/placeholder-loading/dist/css/placeholder-loading.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+  <style>
+    [x-cloak] {
+      display: none;
+    }
+  </style>
+  <script>
+    function mainData() {
+      return {
+        isLoading: false,
+        accessToken: "",
+        userSession: {},
+        pageData: [],
+        searchString: "",
+        filteredData: [],
+        addNewModal: false,
+        editModal: false,
+        deleteModalAlert: false,
+        dataMemberSelector: [],
+        editFormData: {},
+        deleteId: null,
+        async getData() {
+          try {
+            this.isLoading = true;
+            this.accessToken = localStorage.getItem("ads_token")
+            this.userSession = JSON.parse(localStorage.getItem("user"))
+            const token =
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF9hcGkiOjExMTcsImtleVRva2VuIjoiMjljZjI1Y2ItMDRlMy00OThkLWFjM2YtODBlM2Q5Y2M5ZGVlIiwiaWF0IjoxNzA1MjI0OTAzLCJleHAiOjE3MDUyNDY1MDN9.YwLXiyKIUIhbhPgkiOZhob7_y6-HVz1jFlwh-TTtN2I";
+            const getApi = "1117";
+            const page = "1";
+            const limit = "10";
+            const resp = await axios({
+              method: "GET",
+              url: `https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiTunnelGet?id_api=${getApi}&page=1&limit=20`,
+              headers: {
+                Authorization: "Bearer " + this.accessToken,
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+            });
+            this.pageData = resp.data.data;
+            this.isLoading = false;
+          } catch (err) {
+            console.log(err);
+          }
+        },
+
+        async getMemberSelector() {
+          try {
+            const token =
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZF9hcGkiOjExMjgsImtleVRva2VuIjoiOGM0MzY1OGEtZWYzNy00MzllLTg3ODQtY2VlZmQ4ZmY3MTQ2IiwiaWF0IjoxNzA1MjI0OTIyLCJleHAiOjE3MDUyNDY1MjJ9.BjVe9jS-deq8jD1gDzhMLbe6hiotzGD3hPZeSD3KYjE";
+            const getApi = 1128;
+            const resp = await axios({
+              method: "GET",
+              url: `https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiTunnelGet?id_api=${getApi}&page=1&limit=20`,
+              headers: {
+                Authorization: "Bearer " + this.accessToken,
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+            });
+            this.dataMemberSelector = resp.data.data;
+          } catch (err) {
+            console.log(err);
+          }
+        },
+
+        async addData(form) {
+          try {
+            this.isLoading = true;
+            const inputData = {
+              title: form.title,
+              is_enable: form.is_enable,
+              member_id: form.member_id,
+              description: form.description,
+            }
+            const formData = new FormData();
+            formData.append("data", JSON.stringify(inputData));
+            formData.append("insert_by", this.userSession.username);
+            const postApi = 1136;
+            const resp = await axios({
+              method: "POST",
+              url: `https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=${postApi}`,
+              headers: {
+                Authorization: "Bearer " + this.accessToken,
+              },
+              data: formData,
+            });
+            swal({
+              title: `Successfully create new data`,
+              icon: "success",
+            });
+            this.addNewModal = false;
+            this.getData();
+            this.isLoading = false;
+          } catch (err) {
+            console.log(err);
+          }
+        },
+
+        async editData(form) {
+          try {
+            this.isLoading = true;
+            const inputData = {
+              id: form.id,
+              title: form.title,
+              is_enable: form.is_enable,
+              member_id: form.member_id,
+              description: form.description,
+            }
+            const formData = new FormData();
+            formData.append("data", JSON.stringify(inputData));
+            formData.append("update_by", this.userSession.username);
+            const postApi = 1137;
+            const resp = await axios({
+              method: "POST",
+              url: `https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=${postApi}`,
+              headers: {
+                Authorization: "Bearer " + this.accessToken,
+              },
+              data: formData,
+            });
+            swal({
+              title: `Successfully edit data`,
+              icon: "success",
+            });
+            this.editModal = false;
+            this.getData();
+          } catch (err) {
+            console.log(err);
+          }
+        },
+
+        async deleteData() {
+          try {
+            this.isLoading = true;
+            const { title } = this.pageData.find((item) => item.id == this.deleteId);
+            const postApi = 1138;
+            const formData = new FormData();
+            formData.append("id", this.deleteId);
+            formData.append("delete_by", this.userSession.username);
+            const resp = await axios({
+              method: "POST",
+              url: `https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=${postApi}`,
+              headers: {
+                Authorization: "Bearer " + this.accessToken,
+              },
+              data: formData,
+            });
+            swal({
+              title: `${title} has been deleted!`,
+              icon: "success",
+            });
+            this.deleteModalAlert = false;
+            this.getData();
+          } catch (err) {
+            console.log(err);
+          }
+        },
+
+        editDataFormat(currentId) {
+          const edit = this.pageData.find((el) => el.id == currentId);
+          this.editFormData = {
+            id: edit.id,
+            title: edit.title,
+            description: edit.description,
+            member_id: edit.member_id,
+            is_enable: edit.is_enable == 0 ? false : true,
+            member_name: edit.member_name,
+          };
+          console.log(this.editFormData);
+        },
+
+        async searchData(e) {
+          try {
+            const regexMatchAny = new RegExp(`.*${e}`);
+            const search = this.pageData.filter((el) => {
+              return regexMatchAny.test(el.title.toLowerCase());
+            });
+            this.filteredData = search.length > 0 ? search : [];
+          } catch (err) {}
+        },
+
+        init() {
+          this.getData();
+          this.getMemberSelector();
+        },
+      };
+    }
+  </script>
+
+  <div class="text-2xl m-5" x-data="mainData()">
+    <!-- MAIN PAGE -->
+    <h1 class="font-extrabold mb-2">USER LIST</h1>
+    <div class="grid grid-cols-2 p-5">
+      <div>
+        <input
+          class="text-base hover:bg-blue-200 py-1 px-2 mr-2 border-2"
+          @keyup="searchData(searchString)"
+          placeholder="Search"
+          x-model="searchString"
+        />
+        <button
+          class="bg-blue-200 rounded-xl py-1 px-2 text-base active:bg-blue-700 active:text-white"
+          @click="searchData(searchString)"
+        >
+          Search
+        </button>
+      </div>
+      <div class="flex justify-end">
+        <button
+          class="bg-blue-200 rounded-xl py-1 px-2 text-base active:bg-blue-700 active:text-white"
+          @click="addNewModal = true"
+        >
+          Create New
+        </button>
+      </div>
+    </div>
+    <div x-show="isLoading? false: true">
+      <table class="table-auto w-full text-center">
+        <thead class="bg-blue-500 text-white">
+          <tr>
+            <th>No.</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Member Name</th>
+            <th>Enable</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody class="bg-blue-200" x-show="isLoading? false: true">
+          <template x-for="(d,i) in filteredData.length > 0 ? filteredData : pageData">
+            <tr class="hover:bg-blue-300">
+              <td x-text="i+1"></td>
+              <td x-text="d.title"></td>
+              <td x-text="d.description"></td>
+              <td x-text="d.member_name"></td>
+              <td x-text="d.is_enable_show"></td>
+              <td>
+                <div class="inline-flex rounded-md shadow-sm" role="group">
+                  <button
+                    class="p-2 hover:bg-blue-400 rounded-xl"
+                    @click="()=>{
+                    editModal = true
+                    editDataFormat(d.id)
+                  }"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      class="w-6 h-6"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    class="p-2 hover:bg-blue-400 rounded-xl"
+                    @click="()=>{
+                    deleteModalAlert = true
+                    deleteId = d.id
+                  }"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      class="w-6 h-6"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- INPUT MODAL -->
+    <div
+      class="fixed inset-0 bg-black bg-opacity-50 overflow-auto flex flex-wrap py-4 z-[1] justify-center items-center"
+      x-show="addNewModal"
+      x-data="formData = {title: '', description: '', member_id: '', is_enable: false}"
+      x-cloak
+    >
+      <div class="bg-white rounded-lg w-6/12">
+        <div class="flex justify-between items-center border-b">
+          <div class="p-4">
+            <p class="text-xl text-base">CREATE NEW USER</p>
+            <span class="text-slate-400 text-sm">Please fill out the form below!</span>
+          </div>
+          <button
+            form="form1"
+            class="m-4 cursor-pointer"
+            @click="addNewModal = false; formData= {title: '', description: '', member_id: '', is_enable: false};"
+            type="reset"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <form class="grid grid-cols-6 gap-4 p-4" id="form1" @submit.prevent="addData(formData)" autocomplete="off">
+          <div class="col-span-6 flex items-center gap-4">
+            <label for="title" class="text-base w-1/6"> Title <span class="text-red-600">*</span> </label>
+            <input
+              type="text"
+              name="title"
+              id="title"
+              class="border rounded-lg p-2 text-base w-full"
+              x-model="formData.title"
+              required
+            />
+          </div>
+          <div class="col-span-6 flex items-center gap-4">
+            <label for="description" class="text-base w-1/6"> Description </label>
+            <textarea
+              name="description"
+              id="description"
+              rows="3"
+              class="border rounded-lg p-2 text-base w-full"
+              x-model="formData.description"
+            ></textarea>
+          </div>
+          <div class="col-span-6 flex items-center gap-4">
+            <label for="member_name" class="text-base w-1/6"> Member </label>
+            <select
+              required
+              name="member_name"
+              id="member_name"
+              class="border rounded-lg p-2 text-base w-full"
+              x-model="formData.member_id"
+            >
+              <option selected disabled value=""></option>
+              <template x-for="data in dataMemberSelector">
+                <option :value="data.id" x-text="data.member_name"></option>
+              </template>
+            </select>
+          </div>
+          <div class="col-span-6 flex items-center gap-4">
+            <label for="is_enable" class="text-base w-1/6"> Enable </label>
+            <input
+              class="w-5 h-5 border-2 border-blue-500 rounded-sm bg-white"
+              type="checkbox"
+              name="is_enable"
+              id="is_enable"
+              x-model="formData.is_enable"
+            />
+          </div>
+          <div class="col-span-6 flex items-center">
+            <button
+              class="w-1/7 bg-blue-400 rounded-xl mr-3 hover:bg-blue-600"
+              @click="addNewModal = false; formData= {title: '', description: '', member_id: '', is_enable: false};"
+              type="reset"
+            >
+              <p class="text-black text-center text-base text-white font-semibold py-2 px-5">Close</p>
+            </button>
+            <button class="w-1/7 bg-blue-200 rounded-xl hover:bg-blue-600" type="submit">
+              <p class="text-black text-center text-base font-semibold py-2 px-5 hover:text-white">Create</p>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- EDIT MODAL -->
+    <div
+      class="fixed inset-0 bg-black bg-opacity-50 overflow-auto flex flex-wrap py-4 z-[1] justify-center items-center"
+      x-show="editModal"
+      x-data="editFormData"
+      x-cloak
+    >
+      <div class="bg-white rounded-lg w-6/12">
+        <div class="flex justify-between items-center border-b">
+          <div class="p-4">
+            <p class="text-xl text-base">EDIT USER</p>
+            <span class="text-slate-400 text-sm">Please fill out the form below!</span>
+          </div>
+          <div @click="editModal = false; editFormData = {}; editCurrentUserId = null;" class="m-4 cursor-pointer">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </div>
+        </div>
+        <form class="grid grid-cols-6 gap-4 p-4" autocomplete="off" @submit.prevent="editData(editFormData)">
+          <div class="col-span-6 flex items-center gap-4">
+            <label for="title" class="text-base w-1/6"> Title <span class="text-red-600">*</span> </label>
+            <input
+              type="text"
+              name="title"
+              id="title"
+              class="border rounded-lg p-2 text-base w-full"
+              x-model="editFormData.title"
+              required
+            />
+          </div>
+          <div class="col-span-6 flex items-center gap-4">
+            <label for="description" class="text-base w-1/6"> Description </label>
+            <textarea
+              name="description"
+              id="description"
+              rows="3"
+              class="border rounded-lg p-2 text-base w-full"
+              x-model="editFormData.description"
+            ></textarea>
+          </div>
+          <div class="col-span-6 flex items-center gap-4">
+            <label for="member_name" class="text-base w-1/6"> Member </label>
+            <select
+              required
+              name="member_name"
+              id="member_name"
+              class="border rounded-lg p-2 text-base w-full"
+              x-model="editFormData.member_id"
+            >
+              <template x-for="data in dataMemberSelector">
+                <option :value="data.id" x-text="data.member_name"></option>
+              </template>
+            </select>
+          </div>
+          <div class="col-span-6 flex items-center gap-4">
+            <label for="is_enable" class="text-base w-1/6"> Enable </label>
+            <input
+              class="w-5 h-5 border-2 border-blue-500 rounded-sm bg-white"
+              type="checkbox"
+              name="is_enable"
+              :checked="editFormData.is_enable"
+            />
+          </div>
+          <input x-show="false" value="editFormData.id" type="text" />
+          <div class="col-span-6 flex items-center">
+            <button
+              class="w-1/7 bg-blue-400 rounded-xl mr-3 hover:bg-blue-600"
+              @click="editModal = false; editFormData = {}; editCurrentUserId = null;"
+            >
+              <p class="text-black text-center text-base text-white font-semibold py-2 px-5">Close</p>
+            </button>
+            <button class="w-1/7 bg-blue-200 rounded-xl hover:bg-blue-600" type="submit">
+              <p class="text-black text-center text-base font-semibold py-2 px-5 hover:text-white">Update</p>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Delete Alert -->
+    <div
+      class="fixed inset-0 bg-black bg-opacity-50 overflow-auto flex flex-wrap py-4 z-[1] justify-center items-center"
+      x-show="deleteModalAlert"
+      x-cloak
+    >
+      <div class="bg-white rounded-lg w-2/12">
+        <div class="flex justify-between items-center border-b">
+          <div class="p-4">
+            <p class="text-xl text-base">DELETE USER</p>
+            <span class="text-slate-400 text-sm">Are You sure?</span>
+          </div>
+          <div @click="deleteModalAlert = false; deleteId = null;" class="m-4 cursor-pointer">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </div>
+        </div>
+        <form class="grid grid-cols-6 gap-4 p-4" @submit.prevent="deleteData()" autocomplete="off">
+          <div class="col-span-6 flex items-center justify-center">
+            <button
+              class="w-1/7 bg-blue-400 rounded-xl mr-3 hover:bg-blue-600"
+              @click="deleteModalAlert = false; deleteId = null;"
+              type="reset"
+            >
+              <p class="text-black text-center text-base text-white font-semibold py-2 px-5">Close</p>
+            </button>
+            <button class="w-1/7 bg-red-200 rounded-xl hover:bg-red-600" type="submit">
+              <p class="text-black text-center text-base font-semibold py-2 px-5 hover:text-white">Delete</p>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- LOADING SCREEN -->
+
+    <div x-show="isLoading" x-transition>
+      <div class="ph-row mt-0">
+        <template x-for="n in 10">
+          <div class="ph-col-12 big ph-item" style="margin: 5px !important; border-radius: 10px !important"></div>
+        </template>
+      </div>
+    </div>
+  </div>
+</body>

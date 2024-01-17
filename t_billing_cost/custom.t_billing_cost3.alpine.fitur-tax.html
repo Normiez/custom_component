@@ -1,0 +1,372 @@
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] {
+      display: none;
+    }
+
+    td {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+      min-width: 120px;
+    }
+    th {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+    }
+  </style>
+  <script>
+    function main() {
+      return {
+        //URL
+        urlGet: "",
+        urlPost: "",
+        userSession: {},
+        token: "",
+
+        // State
+        checkedAll: true,
+        headerData: {},
+        detailData: [],
+        insertHeaderData: {},
+        insertDetailData: [],
+        detailDataIds: [],
+        vat_arr: [],
+        wht_arr: [],
+        async initialization() {
+          try {
+            this.checkedAll = true;
+            this.urlGet = "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiTunnelGet?id_api=";
+            this.urlPost = "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=";
+            this.userSession = JSON.parse(localStorage.getItem("user"));
+            this.token = localStorage.getItem("ads_token");
+
+            const idData = document.querySelector("#id");
+            const jobOrderCode = document.querySelector("#code");
+            const jobOrderDate = document.querySelector("#job_order_date");
+            const vendorName = document.querySelector("#vendor_name");
+            const salesName = document.querySelector("#sales_name");
+            const serviceName = document.querySelector("#service_name");
+            const serviceDetailName = document.querySelector("#service_detail_name");
+            const projectName = document.querySelector("#project_name");
+            const reffNo = document.querySelector("#reff_no");
+            const referenceUrl = document.querySelector("#reference_url");
+            const remarks = document.querySelector("#remarks");
+            const m_vendor_id = document.querySelector("#m_vendor_id");
+            const employee_id = document.querySelector("#employee_id");
+            const m_project_id = document.querySelector("#m_project_id");
+            const m_service_id = document.querySelector("#m_service_id");
+            const m_service_detail_id = document.querySelector("#m_service_detail_id");
+
+            // URL
+            document.getElementById("cancel-button-child").style.display = "none";
+
+            this.headerData = {
+              jobOrderId: idData != null ? idData : "",
+              jobOrderCode: jobOrderCode != null ? jobOrderCode.value : "",
+              jobOrderDate: jobOrderDate != null ? jobOrderDate.value : "",
+              vendor_name: vendorName != null ? vendorName.value : "",
+              sales_name: salesName != null ? salesName.value : "",
+              service_name: serviceName != null ? serviceName.value : "",
+              service_detail_name: serviceDetailName != null ? serviceDetailName.value : "",
+              project_name: projectName != null ? projectName.value : "",
+              reff_no: reffNo != null ? reffNo.value : "",
+              remarks: remarks != null ? remarks.value : "",
+              referenceUrl: referenceUrl != null ? referenceUrl.value : "",
+              m_vendor_id: m_vendor_id != null ? m_vendor_id.value : "",
+              employee_id: employee_id != null ? employee_id.value : "",
+              m_project_id: m_project_id != null ? m_project_id.value : "",
+              m_service_id: m_service_id != null ? m_service_id.value : "",
+              m_service_detail_id: m_service_detail_id != null ? m_service_detail_id.value : "",
+            };
+
+            const { data } = await axios({
+              url: this.urlGet + "1172&job_order_id=" + idData.value + "&limit=300",
+              headers: {
+                Authorization: "Bearer " + this.token,
+              },
+            });
+            for (let i = 0; i < data.data.length; i++) {
+              data.data[i].linenum = i++;
+            }
+            this.detailData = data.data;
+            //kalo mau groupby
+            console.log(this.detailData, "<<<<<<<<<<<<<<");
+            this.vat_arr = Object.groupBy(this.detailData, ({ m_tax_vat_id }) => m_tax_vat_id);
+            this.wht_arr = Object.groupBy(this.detailData, ({ m_tax_wht_id }) => m_tax_wht_id);
+
+            for (const prop in this.vat_arr) {
+              console.log(this.vat_arr[prop])
+            }
+            // for (const prop in wht_arr) {
+            //   console.log(wht_arr[prop])
+            // }
+            this.insertDetailData = JSON.parse(JSON.stringify(this.detailData));
+          } catch (err) {
+            console.log(err);
+          }
+        },
+
+        async submitToDatabase() {
+          try {
+            let detailPayload = [];
+            for (let i = 0; i < this.insertDetailData.length; i++) {
+              const el = this.insertDetailData[i];
+              el !== null ? detailPayload.push(el) : null;
+            }
+            console.log(detailPayload);
+          } catch (err) {
+            console.log(err);
+          }
+        },
+
+        async insertIntoBillingCost() {
+          try {
+          } catch (error) {}
+        },
+
+        checkboxChecking() {
+          let checkboxes = document.getElementsByName("checklist");
+          let flag = true;
+          for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked == false ? (flag = false) : null;
+          }
+          this.checkedAll = flag;
+        },
+
+        vatTaxCounter(vat_tax_id, rowId, total_amount){
+          console.log(this.vat_arr)
+        },
+        whtTaxCounter(wht_tax_id){
+
+        },
+        init() {
+          this.initialization();
+        },
+      };
+    }
+  </script>
+  <div x-data="main()">
+    <div class="flex flex-rows mx-5">
+      <h1 class="mr-2 text-xs font-light">FINANCIAL</h1>
+      <h1 class="mr-2 text-xs font-extrabold">></h1>
+      <h1 class="mr-2 text-xs font-light">WORK ORDER BILLING COST</h1>
+      <h1 class="mr-2 text-xs font-extrabold">></h1>
+      <h1 class="mr-2 text-xs font-light">CREATE WORK ORDER BILLING COST</h1>
+    </div>
+    <form>
+      <div class="grid grid-cols-2">
+        <div class="grid grid-rows-2 h-fit">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Job Order Code</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.jobOrderCode"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Job Order Date</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.jobOrderDate"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Vendor</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.vendor_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Sales Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.sales_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference Document</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" type="file" disabled />
+          </div>
+        </div>
+        <div class="grid grid-rows-2 h-fit">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.service_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service Detail Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.service_detail_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Project Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.project_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference No</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" x-model="headerData.reff_no" />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Remarks</label>
+            <textarea
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              rows="3"
+              x-text="headerData.remarks"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </form>
+    <!-- checkbox -->
+    <div class="mx-5 mt-5 px-2 py-3 border-2">
+      <h1 class="text-lg font-semibold py-2 mb-4 border-b-2">Billing Details</h1>
+      <div class="overflow-x-scroll overflow-scroll pb-5">
+        <table class="table-auto w-full text-center">
+          <thead>
+            <tr class="bg-gray-200 text-base">
+              <th>
+                <input
+                  x-model="checkedAll"
+                  @change="()=>{
+                      if(checkedAll){
+                        let checkboxes = document.getElementsByName('checklist');
+                        for (let i = 0; i < checkboxes.length; i++) {
+                          checkboxes[i].checked = true
+                        }
+  
+                      }else {
+                        let checkboxes = document.getElementsByName('checklist');
+                        for (let i = 0; i < checkboxes.length; i++) {
+                          checkboxes[i].checked = false
+                          insertDetailData[i] = null
+                        }
+                      }
+                      
+                    }"
+                  type="checkbox"
+                  class="ml-5 w-5 h-5"
+                />
+              </th>
+              <th>Linenum</th>
+              <th>Activity Flag</th>
+              <th>Charge</th>
+              <th>Charge Type</th>
+              <th>Bill Type</th>
+              <th>Vendor</th>
+              <th>Remarks</th>
+              <th>Currency</th>
+              <th>UOM</th>
+              <th>General Arrangement</th>
+              <th>Frequency</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>VAT Tax</th>
+              <th>WHT Tax</th>
+              <!-- <th>Tax Type</th> -->
+              <th>Total Amount</th>
+              <th>DK</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="(data, index) in detailData" :key="index">
+              <tr class="hover:bg-gray-100">
+                <td x-data="isChecked = true">
+                  <input
+                    type="checkbox"
+                    name="checklist"
+                    x-model="isChecked"
+                    @change="()=>{
+                      if(isChecked){
+                        insertDetailData[index] = data
+                        checkboxChecking()
+                      }else {
+                        insertDetailData[index] = null
+                        checkedAll = false
+                       }
+                      
+                    }"
+                    class="ml-5 w-5 h-5"
+                  />
+                </td>
+                <td x-text="data.linenum"></td>
+                <td x-text="data.activity_flag"></td>
+                <td x-text="data.charge_name"></td>
+                <td x-text="data.charge_type"></td>
+                <td x-text="data.bill_type"></td>
+                <td x-text="data.vendor_name"></td>
+                <td>
+                  <input
+                    type="text"
+                    x-model="data.remark"
+                    class="w-full border-2 rounded-lg p-2 text-base"
+                    @keyup="()=>{
+                        if(isChecked == true){
+                          insertDetailData[index].remark = data.remark
+                        }
+                    }"
+                  />
+                </td>
+                <td x-text="data.currency_code"></td>
+                <td x-text="data.uom_name"></td>
+                <td x-text="data.general_arrangement"></td>
+                <td x-text="data.frequency"></td>
+                <td>
+                  <input
+                    type="number"
+                    :value="data.price"
+                    x-model="data.price"
+                    @keyup="()=>{
+                        if(isChecked == true){
+                          insertDetailData[index].price = data.price
+                          data.total_amount = data.price * data.quantity * data.frequency
+                          vatTaxCounter(data.vat_tax_id, data.id, data.total_amount)
+                          insertDetailData[index].total_amount = data.total_amount
+                        }
+                  }"
+                    class="w-full border-2 rounded-lg p-2 text-base"
+                  />
+                </td>
+                <td x-text="data.quantity"></td>
+                <td x-text="data.vat_tax_name"></td>
+                <td x-text="data.wht_tax_name"></td>
+                <!-- <td>6198</td> -->
+                <td x-text="data.total_amount"></td>
+                <td>D</td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="flex flex-rows p-5">
+      <button class="px-3 py-2 bg-blue-400 rounded-xl hover:bg-blue-600 text-white" @click="submitToDatabase()">
+        Save
+      </button>
+    </div>
+  </div>
+</body>
