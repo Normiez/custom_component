@@ -1,0 +1,181 @@
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+  ></script>
+  <style>
+    [x-cloak] {
+      display: none;
+    }
+
+    td {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+    }
+    th {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+    }
+  </style>
+  <div>
+    <div class="flex flex-rows border-b-2 px-2 mb-5">
+      <button>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6 18 18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+      <h1 class="m-5 text-xl font-semibold">CREATE BILLING COST</h1>
+    </div>
+    <div class="flex flex-rows mx-5">
+      <h1 class="mr-2 text-xs font-light">FINANCIAL</h1>
+      <h1 class="mr-2 text-xs font-extrabold">></h1>
+      <h1 class="mr-2 text-xs font-light">JOB ORDER BILLING COST</h1>
+      <h1 class="mr-2 text-xs font-extrabold">></h1>
+      <h1 class="mr-2 text-xs font-light">CREATE JOB ORDER BILLING COST</h1>
+    </div>
+    <form>
+      <div class="grid grid-cols-2">
+        <div class="grid grid-rows-2">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Job Order Code</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Job Order Date</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="date"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Customer Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Customer Phone</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference Document</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="file"
+              disabled
+            />
+          </div>
+        </div>
+        <div class="grid grid-rows-2">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service Detail Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Sales Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Project Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference No</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              disabled
+            />
+          </div>
+        </div>
+      </div>
+    </form>
+    <!-- checkbox -->
+    <div class="mx-5 px-2 py-3 border-2">
+      <h1 class="text-lg font-semibold py-2 mb-4 border-b-2">Billing Details</h1>
+      <table class="table-auto w-full text-center overflow-y-auto">
+        <thead>
+          <tr class="bg-gray-200 text-base">
+            <th></th>
+            <th>No.</th>
+            <th>Activity Flag</th>
+            <th>Activity</th>
+            <th>Charge Type</th>
+            <th>Bill Type</th>
+            <th>Remarks</th>
+            <th>Currency</th>
+            <th>Price</th>
+            <th>Qty</th>
+            <th>Total Amount</th>
+            <th>DK</th>
+            <th>No Reff</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="hover:bg-gray-100">
+            <td>
+              <input type="checkbox" class="ml-5 w-5 h-5"/>
+            </td>
+            <td>1.</td>
+            <td>Cost</td>
+            <td>Rental Code</td>
+            <td>RI</td>
+            <td>AP</td>
+            <td>
+              <input type="text" class="w-full border-2 rounded-lg p-2 text-base" />
+            </td>
+            <td>IDR</td>
+            <td>
+              <input type="number" class="w-full border-2 rounded-lg p-2 text-base" />
+            </td>
+            <td>2</td>
+            <td>10000000</td>
+            <td>D</td>
+            <td>AKJBASOO</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
