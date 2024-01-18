@@ -1,7 +1,10 @@
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+  ></script>
   <style>
     [x-cloak] {
       display: none;
@@ -50,7 +53,9 @@
             const vendorName = document.querySelector("#vendor_name");
             const salesName = document.querySelector("#sales_name");
             const serviceName = document.querySelector("#service_name");
-            const serviceDetailName = document.querySelector("#service_detail_name");
+            const serviceDetailName = document.querySelector(
+              "#service_detail_name"
+            );
             const projectName = document.querySelector("#project_name");
             const reffNo = document.querySelector("#reff_no");
             const referenceUrl = document.querySelector("#reference_url");
@@ -59,7 +64,9 @@
             const employee_id = document.querySelector("#employee_id");
             const m_project_id = document.querySelector("#m_project_id");
             const m_service_id = document.querySelector("#m_service_id");
-            const m_service_detail_id = document.querySelector("#m_service_detail_id");
+            const m_service_detail_id = document.querySelector(
+              "#m_service_detail_id"
+            );
 
             // URL
             // document.getElementById("cancel-button-child").style.display = "none";
@@ -71,7 +78,8 @@
               vendor_name: vendorName != null ? vendorName.value : "",
               sales_name: salesName != null ? salesName.value : "",
               service_name: serviceName != null ? serviceName.value : "",
-              service_detail_name: serviceDetailName != null ? serviceDetailName.value : "",
+              service_detail_name:
+                serviceDetailName != null ? serviceDetailName.value : "",
               project_name: projectName != null ? projectName.value : "",
               reff_no: reffNo != null ? reffNo.value : "",
               remarks: remarks != null ? remarks.value : "",
@@ -80,7 +88,8 @@
               employee_id: employee_id != null ? employee_id.value : "",
               m_project_id: m_project_id != null ? m_project_id.value : "",
               m_service_id: m_service_id != null ? m_service_id.value : "",
-              m_service_detail_id: m_service_detail_id != null ? m_service_detail_id.value : "",
+              m_service_detail_id:
+                m_service_detail_id != null ? m_service_detail_id.value : "",
             };
             this.detailData = [
               {
@@ -177,76 +186,8 @@
               },
             ];
 
-            //VAT TAX
-            const vat_obj = Object.groupBy(this.detailData, ({ m_tax_vat_id }) => m_tax_vat_id);
-            for (const key in vat_obj) {
-              let obj = {
-                linenum: 997,
-                activity_flag: "Cost",
-                charge_name: vat_obj[key][0].vat_tax_name,
-                charge_type: vat_obj[key][0].charge_type,
-                bill_type: vat_obj[key][0].bill_type,
-                remark: vat_obj[key][0].vat_tax_name,
-                total_amount: 0
-              }
-              const data = vat_obj[key];
-              let sum = 0;
-              let totalTaxAmount = data.reduce(function (acc, obj) { 
-                let taxValue = vat_obj[key][0].vat_tax_value
-                let taxSum = 0
-                if(taxValue === 0){
-                  taxSum = 0
-                }else {
-                  taxSum = obj.total_amount * (taxValue / 100)
-                }
-                
-                return acc + taxSum; 
-              }, 0);
-              obj.total_amount = totalTaxAmount
-              this.vatTaxDetailData.push(obj)
-            }
-
-            // WHT TAX
-            const wht_obj = Object.groupBy(this.detailData, ({ m_tax_wht_id }) => m_tax_wht_id);
-            for (const key in wht_obj) {
-              let obj = {
-                linenum: 998,
-                activity_flag: "Cost",
-                charge_name: wht_obj[key][0].wht_tax_name,
-                charge_type: wht_obj[key][0].charge_type,
-                bill_type: wht_obj[key][0].bill_type,
-                remark: wht_obj[key][0].wht_tax_name,
-                total_amount: 0
-              }
-              const data = wht_obj[key];
-              let sum = 0;
-              let totalTaxAmount = data.reduce(function (acc, obj) { 
-                let taxValue = wht_obj[key][0].wht_tax_value
-                let taxSum = 0
-                if(taxValue === 0){
-                  taxSum = 0
-                }else {
-                  taxSum = obj.total_amount * (taxValue / 100)
-                }
-                
-                return acc + taxSum; 
-              }, 0);
-              obj.total_amount = totalTaxAmount
-              this.whtDetailData.push(obj)
-            }
-
-            //TOTAL HUTANG
-            this.linenum999 = {
-              linenum: 998,
-              activity_flag: "Cost",
-              charge_name: "TOTAl HUTANG",
-              charge_type: "RI",
-              bill_type: "AP",
-              remark: "TOTAl HUTANG",
-              total_amount: 0
-            }
-            
             this.insertDetailData = JSON.parse(JSON.stringify(this.detailData));
+            this.taxBuilder();
           } catch (err) {
             console.log(err);
           }
@@ -268,6 +209,104 @@
         async insertIntoBillingCost() {
           try {
           } catch (error) {}
+        },
+
+        taxBuilder() {
+          //VAT TAX
+          const vat_obj = Object.groupBy(
+            this.insertDetailData,
+            ({ m_tax_vat_id }) => m_tax_vat_id
+          );
+
+          for (const key in vat_obj) {
+            if (key == null || key == undefined) {
+              return;
+            }
+            let obj = {
+              linenum: 997,
+              activity_flag: "Cost",
+              charge_name: vat_obj[key][0].vat_tax_name,
+              charge_type: vat_obj[key][0].charge_type,
+              bill_type: vat_obj[key][0].bill_type,
+              remark: vat_obj[key][0].vat_tax_name,
+              total_amount: 0,
+            };
+            const data = vat_obj[key];
+            let sum = 0;
+            let totalTaxAmount = data.reduce(function (acc, obj) {
+              let taxValue = vat_obj[key][0].vat_tax_value;
+              let taxSum = 0;
+              if (taxValue === 0) {
+                taxSum = 0;
+              } else {
+                taxSum = obj.total_amount * (taxValue / 100);
+              }
+
+              return acc + taxSum;
+            }, 0);
+            obj.total_amount = totalTaxAmount;
+            this.vatTaxDetailData.push(obj);
+          }
+
+          // WHT TAX
+          const wht_obj = Object.groupBy(
+            this.insertDetailData,
+            ({ m_tax_wht_id }) => m_tax_wht_id
+          );
+
+          for (const key in wht_obj) {
+            if (key == null || key == undefined) {
+              return;
+            }
+            let obj = {
+              linenum: 998,
+              activity_flag: "Cost",
+              charge_name: wht_obj[key][0].wht_tax_name,
+              charge_type: wht_obj[key][0].charge_type,
+              bill_type: wht_obj[key][0].bill_type,
+              remark: wht_obj[key][0].wht_tax_name,
+              total_amount: 0,
+            };
+            const data = wht_obj[key];
+            let sum = 0;
+            let totalTaxAmount = data.reduce(function (acc, obj) {
+              let taxValue = wht_obj[key][0].wht_tax_value;
+              let taxSum = 0;
+              if (taxValue === 0) {
+                taxSum = 0;
+              } else {
+                taxSum = obj.total_amount * (taxValue / 100);
+              }
+
+              return acc + taxSum;
+            }, 0);
+            obj.total_amount = totalTaxAmount;
+            this.whtDetailData.push(obj);
+          }
+          console.log()
+          //TOTAL HUTANG
+          this.linenum999 = {
+            linenum: 999,
+            activity_flag: "Cost",
+            charge_name: "TOTAl HUTANG",
+            charge_type: "RI",
+            bill_type: "AP",
+            remark: "TOTAl HUTANG",
+            total_amount: 0,
+          };  
+
+          const detailDataReduce = this.insertDetailData.reduce((acc, obj) => {
+            return acc + obj.total_amount;
+          }, 0);
+          const vatDataReduce = this.vatTaxDetailData.reduce((acc, obj) => {
+            return acc + obj.total_amount;
+          }, 0);
+          const whtDataReduce = this.whtDetailData.reduce((acc, obj) => {
+            return acc + obj.total_amount;
+          }, 0);
+
+          this.linenum999.total_amount =
+            detailDataReduce + vatDataReduce - whtDataReduce;
         },
 
         checkboxChecking() {
@@ -331,7 +370,11 @@
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2">Reference Document</label>
-            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" type="file" disabled />
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="file"
+              disabled
+            />
           </div>
         </div>
         <div class="grid grid-rows-2 h-fit">
@@ -363,7 +406,10 @@
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2">Reference No</label>
-            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" x-model="headerData.reff_no" />
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              x-model="headerData.reff_no"
+            />
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2">Remarks</label>
@@ -378,7 +424,9 @@
     </form>
     <!-- checkbox -->
     <div class="mx-5 mt-5 px-2 py-3 border-2">
-      <h1 class="text-lg font-semibold py-2 mb-4 border-b-2">Billing Details</h1>
+      <h1 class="text-lg font-semibold py-2 mb-4 border-b-2">
+        Billing Details
+      </h1>
       <div class="overflow-x-scroll overflow-scroll pb-5">
         <table class="table-auto w-full text-center">
           <thead>
@@ -392,13 +440,17 @@
                       for (let i = 0; i < checkboxes.length; i++) {
                         checkboxes[i].checked = true
                       }
-
+                      insertDetailData = JSON.parse(JSON.stringify(detailData));
+                      taxBuilder()
                     }else {
                       let checkboxes = document.getElementsByName('checklist');
                       for (let i = 0; i < checkboxes.length; i++) {
                         checkboxes[i].checked = false
-                        insertDetailData[i] = null
                       }
+                      insertDetailData = []
+                      vatTaxDetailData = []
+                      whtDetailData = []
+                      linenum999.total_amount = 0 
                     }
                     
                   }"
@@ -421,7 +473,6 @@
               <th>Qty</th>
               <th>VAT Tax</th>
               <th>WHT Tax</th>
-              <!-- <th>Tax Type</th> -->
               <th>Total Amount</th>
               <th>DK</th>
             </tr>
@@ -459,7 +510,7 @@
                     x-model="data.remark"
                     class="w-full border-2 rounded-lg p-2 text-base"
                     @keyup="()=>{
-                      if(isChecked == true){
+                      if(isChecked == true && checkedAll == true){
                         insertDetailData[index].remark = data.remark
                       }
                   }"
@@ -475,9 +526,9 @@
                     :value="data.price"
                     x-model="data.price"
                     @keyup="()=>{
-                      if(isChecked == true){
+                      data.total_amount = data.price * data.quantity * data.frequency
+                      if(isChecked == true && checkedAll == true){
                         insertDetailData[index].price = data.price
-                        data.total_amount = data.price * data.quantity * data.frequency
                         insertDetailData[index].total_amount = data.total_amount
                       }
                 }"
@@ -487,7 +538,6 @@
                 <td x-text="data.quantity"></td>
                 <td x-text="data.vat_tax_name"></td>
                 <td x-text="data.wht_tax_name"></td>
-                <!-- <td>6198</td> -->
                 <td x-text="data.total_amount"></td>
                 <td>D</td>
               </tr>
@@ -567,7 +617,7 @@
                   type="text"
                   x-model="linenum999.remark"
                   class="w-full border-2 rounded-lg p-2 text-base"
-                />  
+                />
               </td>
               <td></td>
               <td></td>
@@ -580,14 +630,18 @@
               <td x-text="linenum999.total_amount"></td>
               <td>K</td>
             </tr>
-            </tbody>
-          </table>
+          </tbody>
+        </table>
       </div>
     </div>
     <div class="flex flex-rows p-5">
-      <button class="px-3 py-2 bg-blue-400 rounded-xl hover:bg-blue-600 text-white" @click="submitToDatabase()">
+      <button
+        class="px-3 py-2 bg-blue-400 rounded-xl hover:bg-blue-600 text-white"
+        @click="submitToDatabase()"
+      >
         Save
       </button>
     </div>
+    
   </div>
 </body>

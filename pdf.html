@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF.js Viewer</title>
+</head>
+<body>
+
+    <!-- <button onclick="openPdfInNewTab()">Open PDF in New Tab</button> -->
+        <!-- <embed src="https://devminio.soedarpo.id:7443/ista-ops-dev/f80536506235d87cf525f53c9022aaae.pdf" width="800px" height="2100px" /> -->
+        <iframe src="https://devminio.soedarpo.id:7443/ista-ops-dev/f80536506235d87cf525f53c9022aaae.pdf" frameborder="0"></iframe>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+
+    <script>
+        function openPdfInNewTab() {
+            const pdfUrl = 'https://devminio.soedarpo.id:7443/ista-ops-dev/f80536506235d87cf525f53c9022aaae.pdf';
+
+            const newTab = window.open();
+
+            pdfjsLib.getDocument(pdfUrl).promise.then(pdfDoc => {
+                for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+                    const canvas = document.createElement('canvas');
+                    newTab.document.body.appendChild(canvas);
+
+                    // Render the page on the canvas
+                    pdfDoc.getPage(pageNum).then(page => {
+                        const context = canvas.getContext('2d');
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+                        page.render(renderContext);
+                    });
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
