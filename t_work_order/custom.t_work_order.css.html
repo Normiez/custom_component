@@ -1,0 +1,207 @@
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] {
+      display: none;
+    }
+
+    .required::before {
+      content: "* ";
+      color: red;
+    }
+
+    td {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+      min-width: 120px;
+    }
+    th {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+    }
+  </style>
+  <script>
+  </script>
+  <div>
+    <div class="flex flex-rows border-b-2 px-2 mb-5">
+      <button>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-6 h-6"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <h1 class="m-5 text-xl font-semibold">CREATE BILLING COST</h1>
+    </div>
+    <div class="flex flex-rows mx-5">
+      <h1 class="mr-2 text-xs font-light">WORK ORDER</h1>
+      <h1 class="mr-2 text-xs font-extrabold">></h1>
+      <h1 class="mr-2 text-xs font-light">CREATE WORK ORDER</h1>
+    </div>
+    <form>
+      <div class="grid grid-cols-2">
+        <div class="grid grid-rows-2 h-fit">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Job Order Code</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" type="text" disabled />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Work Order Date</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" type="text" disabled />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Vendor</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" disabled />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">PIC</label>
+            <select class="w-full border-2 rounded-xl py-1 px-3 text-base" required>
+                <option value=""></option>
+                <option value="test1">test1</option>
+                <option value="test2">test2</option>
+                <option value="test3">test3</option>
+            </select>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">PIC Email</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" disabled />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">PIC Phone</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" disabled />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">Sales Name</label>
+            <select class="w-full border-2 rounded-xl py-1 px-3 text-base" required>
+                <option value="test1">test1</option>
+                <option value="test2">test2</option>
+                <option value="test3">test3</option>
+            </select>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference No</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference Document</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" type="file" />
+          </div>
+        </div>
+        <div class="grid grid-rows-2 h-fit">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" disabled />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service Detail</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" disabled />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">Expected Delivery Date</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" type="date" required />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">Delivery Location</label>
+            <textarea class="w-full border-2 rounded-xl py-1 px-3 text-base" rows="3" required></textarea>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">Delivery Location Address</label>
+            <textarea class="w-full border-2 rounded-xl py-1 px-3 text-base" rows="3" required></textarea>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Remarks</label>
+            <textarea class="w-full border-2 rounded-xl py-1 px-3 text-base" rows="3"></textarea>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Work Order Code</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" value="Auto Generated" disabled />
+          </div>
+        </div>
+      </div>
+    </form>
+    <!-- checkbox -->
+    <div class="mx-5 mt-5 px-2 py-3 border-2">
+      <h1 class="text-lg font-semibold py-2 mb-4 border-b-2">Billing Details</h1>
+      <div class="overflow-x-scroll overflow-scroll pb-5">
+        <table class="table-auto w-full text-center">
+          <thead>
+            <tr class="bg-gray-200 text-base">
+              <th>
+                <input type="checkbox" @change="()=>{
+                    console.log('TEST')
+                }" class="ml-5 w-5 h-5" />
+              </th>
+              <th>No.</th>
+              <th>Charge</th>
+              <th>Remark</th>
+              <th>Vendor</th>
+              <th>Bill Type</th>
+              <th>Currency</th>
+              <th>UOM</th>
+              <th>General Arrangement</th>
+              <th>Frequency</th>
+              <th>Charge Type</th>
+              <th>VAT Tax</th>
+              <th>WHT Tax</th>
+              <th>Unit Price</th>
+              <th>Quantity</th>
+              <th>Total Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="hover:bg-gray-100">
+              <td>
+                <input type="checkbox" name="checklist" class="ml-5 w-5 h-5" />
+              </td>
+              <td>1.</td>
+              <td>TIKET</td>
+              <td>TIKET</td>
+              <td>DJAVA VISTA</td>
+              <td>AP</td>
+              <td>INDONESIA RUPIAH</td>
+              <td>Kilogram</td>
+              <td>Yes</td>
+              <td>11</td>
+              <td>NRI</td>
+              <td>
+                <select>
+                  <option value="test">test</option>
+                  <option value="test1">test1</option>
+                  <option value="test2">test2</option>
+                </select>
+              </td>
+              <td>
+                <select>
+                  <option value="test">test</option>
+                  <option value="test1">test1</option>
+                  <option value="test2">test2</option>
+                </select>
+              </td>
+              <td>
+                <input type="number" class="w-full border-2 rounded-lg p-2 text-base" />
+              </td>
+              <td>5</td>
+              <td>1000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="flex flex-rows p-5">
+        <button
+          class="px-3 py-2 bg-blue-400 rounded-xl hover:bg-blue-600 text-white"
+        >
+          Save
+        </button>
+      </div>
+  </div>
+</body>

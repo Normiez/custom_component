@@ -1,10 +1,8 @@
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script
-    defer
-    src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-  ></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/placeholder-loading/dist/css/placeholder-loading.min.css" />
   <style>
     [x-cloak] {
       display: none;
@@ -25,6 +23,7 @@
   <script>
     function main() {
       return {
+        isLoading: false,
         //URL
         urlGet: "",
         urlPost: "",
@@ -33,7 +32,6 @@
 
         // State
         checkedAll: true,
-        detailState: [],
         headerData: {},
         detailData: [],
         insertHeaderData: {},
@@ -46,11 +44,10 @@
 
         async initialization() {
           try {
+            this.isLoading = true;
             this.checkedAll = true;
-            this.urlGet =
-              "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiTunnelGet?id_api=";
-            this.urlPost =
-              "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=";
+            this.urlGet = "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiTunnelGet?id_api=";
+            this.urlPost = "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=";
             this.userSession = JSON.parse(localStorage.getItem("user"));
             this.token = localStorage.getItem("ads_token");
 
@@ -60,9 +57,7 @@
             const vendorName = document.querySelector("#vendor_name");
             const salesName = document.querySelector("#sales_name");
             const serviceName = document.querySelector("#service_name");
-            const serviceDetailName = document.querySelector(
-              "#service_detail_name"
-            );
+            const serviceDetailName = document.querySelector("#service_detail_name");
             const projectName = document.querySelector("#project_name");
             const reffNo = document.querySelector("#reff_no");
             const referenceUrl = document.querySelector("#reference_url");
@@ -71,13 +66,10 @@
             const employee_id = document.querySelector("#employee_id");
             const m_project_id = document.querySelector("#m_project_id");
             const m_service_id = document.querySelector("#m_service_id");
-            const m_service_detail_id = document.querySelector(
-              "#m_service_detail_id"
-            );
+            const m_service_detail_id = document.querySelector("#m_service_detail_id");
 
             // URL
-            document.getElementById("cancel-button-child").style.display =
-              "none";
+            document.getElementById("cancel-button-child").style.display = "none";
 
             this.headerData = {
               jobOrderId: idData != null ? idData.value : "",
@@ -86,8 +78,7 @@
               vendor_name: vendorName != null ? vendorName.value : "",
               sales_name: salesName != null ? salesName.value : "",
               service_name: serviceName != null ? serviceName.value : "",
-              service_detail_name:
-                serviceDetailName != null ? serviceDetailName.value : "",
+              service_detail_name: serviceDetailName != null ? serviceDetailName.value : "",
               project_name: projectName != null ? projectName.value : "",
               reff_no: reffNo != null ? reffNo.value : "",
               remarks: remarks != null ? remarks.value : "",
@@ -96,24 +87,19 @@
               employee_id: employee_id != null ? employee_id.value : "",
               m_project_id: m_project_id != null ? m_project_id.value : "",
               m_service_id: m_service_id != null ? m_service_id.value : "",
-              m_service_detail_id:
-                m_service_detail_id != null ? m_service_detail_id.value : "",
+              m_service_detail_id: m_service_detail_id != null ? m_service_detail_id.value : "",
             };
 
             const { data } = await axios({
-              url:
-                this.urlGet +
-                "1172&job_order_id=" +
-                idData.value +
-                "&limit=300",
+              url: this.urlGet + "1172&job_order_id=" + idData.value + "&limit=300",
               headers: {
                 Authorization: "Bearer " + this.token,
               },
             });
             this.detailData = data.data;
             this.insertDetailData = JSON.parse(JSON.stringify(this.detailData));
-            this.detailState = JSON.parse(JSON.stringify(this.detailData));
             this.taxBuilder();
+            this.isLoading = false;
           } catch (err) {
             console.log(err);
           }
@@ -123,7 +109,6 @@
           let detailDataLocal = [];
           for (let i = 0; i < this.insertDetailData.length; i++) {
             const el = this.insertDetailData[i];
-            // Check IE Flag
             if (el !== null) {
               detailDataLocal.push(el);
             }
@@ -132,14 +117,11 @@
           this.vatTaxDetailData = [];
 
           //VAT TAX
-          const vat_obj = Object.groupBy(
-            detailDataLocal,
-            ({ m_tax_vat_id }) => m_tax_vat_id
-          );
+          const vat_obj = Object.groupBy(detailDataLocal, ({ m_tax_vat_id }) => m_tax_vat_id);
 
           for (const key in vat_obj) {
             if (key == null || key == undefined) {
-              return;
+              continue;
             }
             let obj = {
               linenum: 997,
@@ -148,17 +130,42 @@
               charge_type: vat_obj[key][0].charge_type,
               bill_type: vat_obj[key][0].bill_type,
               remark: vat_obj[key][0].vat_tax_name,
+              currency_code: null,
+              frequency: null,
+              general_arrangement: null,
+              id: null,
+              job_order_id: null,
+              m_charge_id: null,
+              m_currency_id: null,
+              m_tax_vat_id: null,
+              m_tax_wht_id: null,
+              m_uom_id: null,
+              m_vendor_id: null,
+              price: null,
+              quantity: null,
+              uom_name: null,
+              vat_ie_flag: null,
+              vat_tax_name: null,
+              vat_tax_value: null,
+              vendor_name: null,
+              wht_ie_flag: null,
+              wht_tax_name: null,
+              wht_tax_value: null,
               total_amount: 0,
             };
             const data = vat_obj[key];
             let sum = 0;
             let totalTaxAmount = data.reduce(function (acc, obj) {
-              let taxValue = vat_obj[key][0].vat_tax_value;
+              const frequency =
+                obj.frequency == null || obj.frequency == "" || obj.frequency == undefined || obj.frequency == 0
+                  ? 1
+                  : Number(obj.frequency);
+              let taxValue = obj.vat_tax_value;
               let taxSum = 0;
               if (taxValue === 0) {
                 taxSum = 0;
               } else {
-                taxSum = obj.total_amount * (taxValue / 100);
+                taxSum = Number(obj.price) * frequency * Number(obj.quantity) * (taxValue / 100);
               }
               return acc + Math.round(taxSum);
             }, 0);
@@ -167,14 +174,11 @@
           }
 
           // WHT TAX
-          const wht_obj = Object.groupBy(
-            detailDataLocal,
-            ({ m_tax_wht_id }) => m_tax_wht_id
-          );
+          const wht_obj = Object.groupBy(detailDataLocal, ({ m_tax_wht_id }) => m_tax_wht_id);
 
           for (const key in wht_obj) {
             if (key == null || key == undefined) {
-              return;
+              continue;
             }
             let obj = {
               linenum: 998,
@@ -183,23 +187,67 @@
               charge_type: wht_obj[key][0].charge_type,
               bill_type: wht_obj[key][0].bill_type,
               remark: wht_obj[key][0].wht_tax_name,
+              currency_code: null,
+              frequency: null,
+              general_arrangement: null,
+              id: null,
+              job_order_id: null,
+              m_charge_id: null,
+              m_currency_id: null,
+              m_tax_vat_id: null,
+              m_tax_wht_id: null,
+              m_uom_id: null,
+              m_vendor_id: null,
+              price: null,
+              quantity: null,
+              uom_name: null,
+              vat_ie_flag: null,
+              vat_tax_name: null,
+              vat_tax_value: null,
+              vendor_name: null,
+              wht_ie_flag: null,
+              wht_tax_name: null,
+              wht_tax_value: null,
               total_amount: 0,
             };
             const data = wht_obj[key];
             let sum = 0;
             let totalTaxAmount = data.reduce(function (acc, obj) {
-              let taxValue = wht_obj[key][0].wht_tax_value;
+              const frequency =
+                obj.frequency == null || obj.frequency == "" || obj.frequency == undefined || obj.frequency == 0
+                  ? 1
+                  : Number(obj.frequency);
+              let taxValue = obj.wht_tax_value;
               let taxSum = 0;
               if (taxValue === 0) {
                 taxSum = 0;
               } else {
-                taxSum = obj.total_amount * (taxValue / 100);
+                taxSum = Number(obj.price) * frequency * Number(obj.quantity) * (taxValue / 100);
               }
-
               return acc + Math.round(taxSum);
             }, 0);
             obj.total_amount = totalTaxAmount;
             this.whtDetailData.push(obj);
+          }
+          for (let i = 0; i < this.insertDetailData.length; i++) {
+            const el = this.insertDetailData[i];
+            // Check IE Flag
+            if (el !== null) {
+              const frequency =
+                el.frequency == null || el.frequency == "" || el.frequency == undefined ? 1 : Number(el.frequency);
+              let total = Number(el.price) * Number(el.quantity) * frequency;
+              let vatVal = el.vat_tax_value;
+              let whtVal = el.wht_tax_value;
+              if (el.wht_ie_flag == "I") {
+                total = total - total * (whtVal / 100);
+              }
+
+              if (el.vat_ie_flag == "I") {
+                total = total - total * (vatVal / 100);
+              }
+              el.total_amount = Math.round(total);
+              this.detailData[i].total_amount = Math.round(total);
+            }
           }
 
           //TOTAL HUTANG
@@ -210,6 +258,27 @@
             charge_type: "RI",
             bill_type: "AP",
             remark: "TOTAl HUTANG",
+            currency_code: null,
+            frequency: null,
+            general_arrangement: null,
+            id: null,
+            job_order_id: null,
+            m_charge_id: null,
+            m_currency_id: null,
+            m_tax_vat_id: null,
+            m_tax_wht_id: null,
+            m_uom_id: null,
+            m_vendor_id: null,
+            price: null,
+            quantity: null,
+            uom_name: null,
+            vat_ie_flag: null,
+            vat_tax_name: null,
+            vat_tax_value: null,
+            vendor_name: null,
+            wht_ie_flag: null,
+            wht_tax_name: null,
+            wht_tax_value: null,
             total_amount: 0,
           };
 
@@ -222,38 +291,57 @@
           const whtDataReduce = this.whtDetailData.reduce((acc, obj) => {
             return acc + Number(obj.total_amount);
           }, 0);
-          this.linenum999.total_amount =
-            detailDataReduce + vatDataReduce - whtDataReduce;
-
-          for (let i = 0; i < this.insertDetailData.length; i++) {
-            const el = this.insertDetailData[i];
-            // Check IE Flag
-            if (el !== null) {
-              let total = Number(el.total_amount);
-              let vatVal = el.vat_tax_value;
-              let whtVal = el.wht_tax_value;
-              if (el.wht_ie_flag == "I") {
-                total = total - (total * (whtVal / 100));
-              }
-
-              if (el.vat_ie_flag == "I") {
-                total = total - (total * (vatVal / 100));
-              }
-              el.total_amount = Math.round(total);
-            }
-          }
+          this.linenum999.total_amount = detailDataReduce + vatDataReduce - whtDataReduce;
         },
 
         async submitToDatabase() {
           try {
+            this.isLoading = true;
             let headerPayload = this.headerData;
-            console.log(headerPayload);
             let detailPayload = [];
             for (let i = 0; i < this.insertDetailData.length; i++) {
               const el = this.insertDetailData[i];
               el !== null ? detailPayload.push(el) : null;
             }
+            if (detailPayload.length < 1) {
+              alert("Please select one detail data");
+              return;
+            }
+            detailPayload.forEach((el, i) => {
+              el.linenum = i + 1;
+            });
+            detailPayload.push(...this.vatTaxDetailData);
+            detailPayload.push(...this.whtDetailData);
+            detailPayload.push(this.linenum999);
+            const formData = new FormData();
+            formData.append("dataJSON", JSON.stringify(detailPayload));
+            formData.append("id", headerPayload.jobOrderId);
+            formData.append("code", headerPayload.jobOrderCode);
+            formData.append("job_order_date", headerPayload.jobOrderDate);
+            formData.append("m_vendor_id", headerPayload.m_vendor_id);
+            formData.append("employee_id", headerPayload.employee_id);
+            formData.append("reference_url", headerPayload.referenceUrl);
+            formData.append("reference_no", headerPayload.reff_no);
+            formData.append("remarks", headerPayload.remarks);
+            formData.append("m_project_id", headerPayload.m_project_id);
+            formData.append("m_service_id", headerPayload.m_service_id);
+            formData.append("m_service_detail_id", headerPayload.m_service_detail_id);
+            formData.append("insert_by", this.userSession.username);
+
+            const data = await axios({
+              url: this.urlPost + "1197",
+              data: formData,
+              method: "POST",
+              headers: {
+                Authorization: "Bearer " + this.token,
+              },
+            });
             console.log(detailPayload);
+            let checkboxes = document.getElementsByName("checklist");
+            for (let i = 0; i < checkboxes.length; i++) {
+              checkboxes[i].checked = true;
+            }
+            this.initialization();
           } catch (err) {
             console.log(err);
           }
@@ -321,7 +409,7 @@
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2">Reference Document</label>
             <button
-              x-show="headerData.referenceUrl.length > 6 ? false : true"
+              x-show="headerData.referenceUrl.length > 6 ? true : false"
               @click="(e)=>{
               e.preventDefault()
               window.open(headerData.referenceUrl)
@@ -330,10 +418,7 @@
             >
               Open PDF In New Tab
             </button>
-            <p
-              x-show="headerData.referenceUrl == null ? true : false"
-              class="text-sm bg-gray-200 p-2 rounded-xl"
-            >
+            <p x-show="headerData.referenceUrl == null ? false : true" class="text-sm bg-gray-200 p-2 rounded-xl">
               Reference Data Not Found
             </p>
           </div>
@@ -367,10 +452,7 @@
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2">Reference No</label>
-            <input
-              class="w-full border-2 rounded-xl py-1 px-3 text-base"
-              x-model="headerData.reff_no"
-            />
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" x-model="headerData.reff_no" />
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2">Remarks</label>
@@ -385,9 +467,7 @@
     </form>
     <!-- checkbox -->
     <div class="mx-5 mt-5 px-2 py-3 border-2">
-      <h1 class="text-lg font-semibold py-2 mb-4 border-b-2">
-        Billing Details
-      </h1>
+      <h1 class="text-lg font-semibold py-2 mb-4 border-b-2">Billing Details</h1>
       <div class="overflow-x-scroll overflow-scroll pb-5">
         <table class="table-auto w-full text-center">
           <thead>
@@ -401,7 +481,6 @@
                     for (let i = 0; i < checkboxes.length; i++) {
                       checkboxes[i].checked = true
                     }
-                    detailData = JSON.parse(JSON.stringify(detailState));
                     insertDetailData = JSON.parse(JSON.stringify(detailData));
                     taxBuilder()
                   }else {
@@ -474,8 +553,10 @@
                     x-model="data.remark"
                     class="w-full border-2 rounded-lg p-2 text-base"
                     @keyup="()=>{
-                      if(isChecked == true && checkedAll == true){
-                        insertDetailData[index].remark = data.remark
+                      if(isChecked == true){
+                        if(insertDetailData[index] != null){
+                          insertDetailData[index].remark = data.remark
+                        }
                       }
                   }"
                   />
@@ -490,12 +571,23 @@
                     :value="data.price"
                     x-model="data.price"
                     @keyup="()=>{
-                      data.total_amount = data.price * data.quantity * data.frequency
-                      if(isChecked == true && checkedAll == true){
-                        insertDetailData[index].price = data.price
-                        insertDetailData[index].total_amount = data.total_amount
-                        taxBuilder()
-                      }
+                      const frequency = data.frequency == null || data.frequency == '' || data.frequency == undefined ? 1 : Number(data.frequency);
+              let total = Number(data.price) * Number(data.quantity) * frequency
+              let vatVal = data.vat_tax_value;
+              let whtVal = data.wht_tax_value;
+              if (data.wht_ie_flag == 'I') {
+                total = total - (total * (whtVal / 100));
+              }
+              
+              if (data.vat_ie_flag == 'I') {
+                total = total - (total * (vatVal / 100));
+              }
+              data.total_amount = Math.round(total);
+                        if(insertDetailData[index] != null){
+                          insertDetailData[index].price = data.price
+                          insertDetailData[index].total_amount = data.total_amount
+                          taxBuilder()
+                        }
                 }"
                     class="w-full border-2 rounded-lg p-2 text-base"
                   />
@@ -522,7 +614,9 @@
                     x-model="data.remark"
                     class="w-full border-2 rounded-lg p-2 text-base"
                     @keyup="()=>{
+                      if(insertDetailData[index] != null){
                         vatTaxDetailData[index].remark = data.remark
+                      }
                   }"
                   />
                 </td>
@@ -553,7 +647,9 @@
                     x-model="data.remark"
                     class="w-full border-2 rounded-lg p-2 text-base"
                     @keyup="()=>{
+                      if(insertDetailData[index] != null){
                         whtDetailData[index].remark = data.remark
+                      }
                   }"
                   />
                 </td>
@@ -578,11 +674,7 @@
               <td x-text="linenum999.bill_type"></td>
               <td></td>
               <td>
-                <input
-                  type="text"
-                  x-model="linenum999.remark"
-                  class="w-full border-2 rounded-lg p-2 text-base"
-                />
+                <input type="text" x-model="linenum999.remark" class="w-full border-2 rounded-lg p-2 text-base" />
               </td>
               <td></td>
               <td></td>
@@ -597,6 +689,13 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+    <div x-show="isLoading" x-transition>
+      <div class="ph-row mt-0">
+        <template x-for="n in 10">
+          <div class="ph-col-12 big ph-item" style="margin: 5px !important; border-radius: 10px !important"></div>
+        </template>
       </div>
     </div>
     <div class="flex flex-rows p-5">

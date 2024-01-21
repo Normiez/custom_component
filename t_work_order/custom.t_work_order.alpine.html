@@ -1,0 +1,486 @@
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] {
+      display: none;
+    }
+
+    .required::before {
+      content: "* ";
+      color: red;
+    }
+
+    td {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+      min-width: 120px;
+    }
+    th {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+    }
+  </style>
+  <script>
+    function main() {
+      return {
+        //state
+        checkedAll: true,
+        todayDate: new Date().toISOString().split("T")[0],
+        headerData: {},
+        detailData: [],
+        insertDetailData: [],
+        urlGet: "",
+        urlPost: "",
+        userSession: {},
+        token: "",
+
+        // selector state
+        vat_data: [],
+        wht_data: [],
+        vendor_contact_data: [],
+        sales_data: [],
+        async initialization() {
+          try {
+            //setup selector
+            let yourDate = new Date();
+            this.todayDate = yourDate.toISOString().split("T")[0];
+            this.checkedAll = true;
+            this.urlGet = "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiTunnelGet?id_api=";
+            this.urlPost = "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=";
+            this.userSession = JSON.parse(localStorage.getItem("user"));
+            this.token = localStorage.getItem("ads_token");
+
+            const idData = document.querySelector("#id");
+            const jobOrderCode = document.querySelector("#job_order_code");
+            const workOrderDate = document.querySelector("#work_order_date");
+            const vendorName = document.querySelector("#vendor_name");
+            const m_vendor_id = document.querySelector("#m_vendor_bill_id");
+            const pic = document.querySelector("#pic");
+            const pic_id = document.querySelector("#m_vendor_contact_id");
+            const email_pic = document.querySelector("#email_pic");
+            const phone_pic = document.querySelector("#phone_pic");
+            const salesName = document.querySelector("#sales_name");
+            const m_employee_id = document.querySelector("#m_employee_id");
+            const reff_no = document.querySelector("#reff_no");
+            const reference_url = document.querySelector("#reference_url");
+            const service_name = document.querySelector("#service_name");
+            const m_service_id = document.querySelector("#m_service_id");
+            const service_detail_name = document.querySelector("#service_detail_name");
+            const m_service_detail_id = document.querySelector("#m_service_detail_id");
+            const remarks = document.querySelector("#remarks");
+
+            // setup header dan detail
+            this.headerData = {
+              jobOrderCode: jobOrderCode != null ? jobOrderCode.value : "",
+              workOrderDate: workOrderDate != null ? workOrderDate.value : "",
+              vendorName: vendorName != null ? vendorName.value : "",
+              vendor_id: m_vendor_id != null ? m_vendor_id.value : "",
+              pic: pic != null ? pic.value : "",
+              picId: pic_id != null ? pic_id.value : "",
+              picEmail: email_pic != null ? email_pic.value : "",
+              picPhone: phone_pic != null ? phone_pic.value : "",
+              salesName: salesName != null ? salesName.value : "",
+              salesId: m_employee_id != null ? m_employee_id.value : "",
+              referenceNo: reff_no != null ? reff_no.value : "",
+              referenceDoc: reference_url != null ? reference_url.value : "",
+              service: service_name != null ? service_name.value : "",
+              serviceId: m_service_id != null ? m_service_id.value : "",
+              serviceDetail: service_detail_name != null ? service_detail_name.value : "",
+              serviceDetailId: m_service_detail_id != null ? m_service_detail_id.value : "",
+              expectedDate: this.todayDate,
+              deliveryLocation: "",
+              deliveryLocationAddress: "",
+              remarks: remarks != null ? remarks.value : "",
+              code: "",
+            };
+
+            this.getTax();
+            this.getSelectorVendorContacts();
+            this.getSelectorEmployees();
+
+            const { data } = await axios({
+              url: this.urlGet + "1216&id_1=" + idData.value ,
+              headers: {
+                Authorization: "Bearer " + this.token,
+              },
+            });
+
+            this.detailData = JSON.parse(JSON.stringify(data.data));
+            this.insertDetailData = JSON.parse(JSON.stringify(this.detailData));
+          } catch (err) {
+            console.log(err);
+          }
+        },
+
+        async getTax() {
+          try {
+            const { data } = await axios({
+              url: this.urlGet + "1212&limit=300",
+              headers: {
+                Authorization: "Bearer " + this.token,
+              },
+            });
+
+            const vat_wht_obj = Object.groupBy(data.data, ({ vat_wht_flag }) => vat_wht_flag);
+            this.vat_data = vat_wht_obj.VAT;
+            this.wht_data = vat_wht_obj.WHT;
+          } catch (error) {
+            console.log(err);
+          }
+        },
+
+        async getSelectorEmployees(){
+          try {
+            const { data } = await axios({
+              url: this.urlGet + "1215&limit=300",
+              headers: {
+                Authorization: "Bearer " + this.token,
+              },
+            });
+            this.sales_data = data.data
+          } catch (err) {
+            console.log(err)
+          }
+        },
+
+        async getSelectorVendorContacts() {
+          try {
+            const { data } = await axios({
+              url: this.urlGet + "1213&m_vendor_id=" + this.headerData.vendor_id + "&is_deleted=0",
+              headers: {
+                Authorization: "Bearer " + this.token,
+              },
+            });
+            const picData = data.data.find((item) => item.is_primary == 1);
+            if (picData != undefined) {
+              this.headerData.pic = `${picData.salutation} ${picData.name}`;
+              this.headerData.picEmail = picData.email;
+              this.headerData.picPhone = picData.phone;
+            }
+            this.vendor_contact_data = data.data.map((item) => {
+              return {
+                id: item.id,
+                name: `${item.salutation} ${item.name}`,
+                email: item.email,
+                phone: item.phone
+              };
+            });
+          } catch (err) {
+            console.log(err);
+          }
+        },
+
+        checkBoxChecking() {
+          let checkboxes = document.getElementsByName("checklist");
+          let flag = true;
+          for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked == false ? (flag = false) : null;
+          }
+          this.checkedAll = flag;
+        },
+
+        async submitData() {
+          let detailPayloads = [];
+          for (let i = 0; i < this.insertDetailData.length; i++) {
+            if (this.insertDetailData[i] != null) {
+              detailPayloads.push(this.detailData[i]);
+            }
+          }
+          console.log(this.headerData)
+          console.log(detailPayloads);
+          
+          const formData = new FormData()
+          // BIKIN FORM DULU
+        },
+        init() {
+          this.initialization();
+        },
+      };
+    }
+  </script>
+  <div x-data="main()">
+    <div class="flex flex-rows mx-5">
+      <h1 class="mr-2 text-xs font-light">WORK ORDER</h1>
+      <h1 class="mr-2 text-xs font-extrabold">></h1>
+      <h1 class="mr-2 text-xs font-light">CREATE WORK ORDER</h1>
+    </div>
+    <form @submit.prevent="submitData()">
+      <div class="grid grid-cols-2">
+        <div class="grid grid-rows-2 h-fit">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Job Order Code</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.jobOrderCode"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Work Order Date</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.workOrderDate"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Vendor</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.vendorName"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">PIC</label>
+            <select class="w-full border-2 rounded-xl py-1 px-3 text-base" x-model="headerData.picId" required @change="(e)=>{
+              if(e.target.value != ''){
+                const vendor = vendor_contact_data.find(item => item.id == e.target.value)
+                headerData.picPhone = vendor.phone ? vendor.phone : ''
+                headerData.picEmail = vendor.email ? vendor.email : ''
+              }else {
+                headerData.picPhone = ''
+                headerData.picEmail = ''
+              }
+            }">
+              <option value="" :selected="headerData.picId == ''"></option>
+              <template x-for="(contact, index) in vendor_contact_data" :key="index">
+                <option :value="contact.id" x-text="contact.name" :selected="contact.id == headerData.picId"></option>
+              </template>
+            </select>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">PIC Email</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.picEmail"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">PIC Phone</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.picPhone"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">Sales Name</label>
+            <select class="w-full border-2 rounded-xl py-1 px-3 text-base" required>
+              <option value="" :selected="headerData.salesId == ''"></option>
+              <template x-for="(sales, index) in sales_data" :key="index">
+                <option :value="sales.id" x-text="sales.name" :selected="sales.id == headerData.salesId"></option>
+              </template>
+            </select>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference No</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" x-model="headerData.referenceNo" />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference Document</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" type="file" />
+          </div>
+        </div>
+        <div class="grid grid-rows-2 h-fit">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.service"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service Detail</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.serviceDetail"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">Expected Delivery Date</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              x-model="todayDate"
+              type="date"
+              x-model="headerData.expectedDate"
+              required
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">Delivery Location</label>
+            <textarea
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              rows="3"
+              x-model="headerData.deliveryLocation"
+              required
+            ></textarea>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2 required">Delivery Location Address</label>
+            <textarea
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              rows="3"
+              x-model="headerData.deliveryLocationAddress"
+              required
+            ></textarea>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Remarks</label>
+            <textarea
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              x-model="headerData.remarks"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Work Order Code</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" value="Auto Generated" disabled />
+          </div>
+        </div>
+      </div>
+      <!-- checkbox -->
+      <div class="mx-5 mt-5 px-2 py-3 border-2">
+        <h1 class="text-lg font-semibold py-2 mb-4 pl-2 border-b-2">WORK ORDER DETAILS</h1>
+        <div class="overflow-x-scroll overflow-scroll pb-5">
+          <table class="table-auto w-full text-center">
+            <thead>
+              <tr class="bg-gray-200 text-base">
+                <th>
+                  <input
+                    type="checkbox"
+                    x-model="checkedAll"
+                    @change="()=>{
+                    if(checkedAll){
+                        let checkboxes = document.getElementsByName('checklist')
+                          for(let i = 0; i < checkboxes.length; i++){
+                            checkboxes[i].checked = true
+                          }
+                    }else if(!checkedAll){
+                        let checkboxes = document.getElementsByName('checklist')
+                          for(let i = 0; i < checkboxes.length; i++){
+                            checkboxes[i].checked = false
+                          }
+                    }
+                  }"
+                    class="ml-5 w-5 h-5"
+                  />
+                </th>
+                <th>No.</th>
+                <th>Charge</th>
+                <th>Remark</th>
+                <th>Vendor</th>
+                <th>Bill Type</th>
+                <th>Currency</th>
+                <th>UOM</th>
+                <th>General Arrangement</th>
+                <th>Frequency</th>
+                <th>Charge Type</th>
+                <th>VAT Tax</th>
+                <th>WHT Tax</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Total Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="(data, index) in detailData" :key="index">
+                <tr class="hover:bg-gray-100">
+                  <td x-data="isChecked = true">
+                    <input
+                      x-model="isChecked"
+                      type="checkbox"
+                      name="checklist"
+                      @change="()=>{
+                    if(isChecked){
+                        insertDetailData[index] = data
+                        checkBoxChecking()
+                    }else {
+                        insertDetailData[index] = null
+                        checkedAll = false
+                    }
+                  }"
+                      class="ml-5 w-5 h-5"
+                    />
+                  </td>
+                  <td x-text="index+1"></td>
+                  <td x-text="data.charge_name"></td>
+                  <td x-text="data.remark"></td>
+                  <td x-text="data.vendor_name"></td>
+                  <td x-text="data.bill_type"></td>
+                  <td x-text="data.currency_name"></td>
+                  <td x-text="data.uom_name"></td>
+                  <td x-text="data.general_arrangement == 'Y'? 'YES' : 'NO'"></td>
+                  <td x-text="data.frequency"></td>
+                  <td x-text="data.charge_type"></td>
+                  <td>
+                    <select
+                      x-model="data.m_tax_vat_id"
+                      class="w-full border-2 rounded-lg p-2 text-base"
+                      @change="(e)=>{
+                    e.target.value == '' ? (data.m_tax_vat_id = null) : (data.m_tax_vat_id = Number(e.target.value))
+                    const selectedText = vat_data.find(item => item.id == data.m_tax_vat_id)
+                    data.tax_vat_name = selectedText ? selectedText.name : ''
+                    insertDetailData[index].tax_vat_name = selectedText ? selectedText.name : ''
+                    insertDetailData[index].m_tax_vat_id = data.m_tax_vat_id
+                  }"
+                    >
+                      <option value="" :selected="data.m_tax_vat_id == null"></option>
+                      <template x-for="vat in vat_data" :key="vat.id">
+                        <option :value="vat.id" x-text="vat.name" :selected="data.m_tax_vat_id == vat.id"></option>
+                      </template>
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      x-model="data.m_tax_wht_id"
+                      class="w-full border-2 rounded-lg p-2 text-base"
+                      @change="(e)=>{
+                    e.target.value == '' ? (data.m_tax_wht_id = null) : (data.m_tax_wht_id = Number(e.target.value))
+                    const selectedText = wht_data.find(item => item.id == data.m_tax_wht_id)
+                    data.tax_wht_name = selectedText ? selectedText.name : ''
+                    insertDetailData[index].tax_wht_name = selectedText ? selectedText.name : ''
+                    insertDetailData[index].m_tax_wht_id = data.m_tax_wht_id
+                  }"
+                    >
+                      <option value="" :selected="data.m_tax_wht_id == null"></option>
+                      <template x-for="wht in wht_data" :key="wht.id">
+                        <option :value="wht.id" x-text="wht.name" :selected="data.m_tax_wht_id == wht.id"></option>
+                      </template>
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      :value="data.unit_price"
+                      x-model="data.unit_price"
+                      @keyup="()=>{
+                        data.total_amount = Number(data.unit_price) * Number(data.frequency) * Number(data.qty_1)
+                        insertDetailData[index].total_amount = data.total_amount
+                    }"
+                      type="number"
+                      class="w-full border-2 rounded-lg p-2 text-base"
+                    />
+                  </td>
+                  <td x-text="data.qty_1"></td>
+                  <td x-text="data.total_amount"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex flex-rows p-5">
+        <button class="px-3 py-2 bg-blue-400 rounded-xl hover:bg-blue-600 text-white" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</body>
