@@ -1,7 +1,23 @@
 <body>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+  ></script>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/placeholder-loading/dist/css/placeholder-loading.min.css"
+  />
+  <link
+    href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    rel="stylesheet"
+    type="text/css"
+  />
+  <script
+    src="https://cdn.jsdelivr.net/npm/toastify-js"
+    type="text/javascript"
+  ></script>
+
   <style>
     [x-cloak] {
       display: none;
@@ -23,38 +39,46 @@
       padding-bottom: 15px;
       padding-right: 15px;
     }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
   </style>
   <script>
     function main() {
       return {
         //state
+        isLoading: false,
         checkedAll: true,
         todayDate: new Date().toISOString().split("T")[0],
         headerData: {},
         detailData: [],
         insertDetailData: [],
-        urlGet: "",
+        mainUrl: "",
         urlPost: "",
         userSession: {},
-        token: "",
 
         // selector state
         vat_data: [],
         wht_data: [],
         vendor_contact_data: [],
         sales_data: [],
+        fileUploadedArray: [],
         async initialization() {
           try {
             //setup selector
+            this.isLoading = true;
             let yourDate = new Date();
             this.todayDate = yourDate.toISOString().split("T")[0];
             this.checkedAll = true;
-            this.urlGet = "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiTunnelGet?id_api=";
-            this.urlPost = "https://devapi-psi-studio.soedarpo.id/v1/core/GlobalApiPostTunnel?id_api=";
+            this.mainUrl = "/api/getqueryvalues";
+            this.urlPost = "/api/global-api-post-multiple-tunnel";
             this.userSession = JSON.parse(localStorage.getItem("user"));
-            this.token = localStorage.getItem("ads_token");
 
             const idData = document.querySelector("#id");
+            const jobOrderId = document.querySelector("#t_job_order_id");
             const jobOrderCode = document.querySelector("#job_order_code");
             const workOrderDate = document.querySelector("#work_order_date");
             const vendorName = document.querySelector("#vendor_name");
@@ -69,108 +93,266 @@
             const reference_url = document.querySelector("#reference_url");
             const service_name = document.querySelector("#service_name");
             const m_service_id = document.querySelector("#m_service_id");
-            const service_detail_name = document.querySelector("#service_detail_name");
-            const m_service_detail_id = document.querySelector("#m_service_detail_id");
+            const service_detail_name = document.querySelector(
+              "#service_detail_name"
+            );
+            const m_service_detail_id = document.querySelector(
+              "#m_service_detail_id"
+            );
             const remarks = document.querySelector("#remarks");
 
             // setup header dan detail
             this.headerData = {
+              t_job_order_id: jobOrderId != null ? jobOrderId.value : "",
+              m_vendor_bill_id: m_vendor_id != null ? m_vendor_id.value : "",
+              insert_by: this.userSession.username,
+              code: "",
+              delivery_location: "",
+              delivery_location_address: "",
+              expected_delivery_date: this.todayDate,
+              reff_no: reff_no != null ? reff_no.value : "",
+              m_vendor_contact_id: pic_id != null ? pic_id.value : "",
+              reff_document: reference_url != null ? reference_url.value : "",
               jobOrderCode: jobOrderCode != null ? jobOrderCode.value : "",
               workOrderDate: workOrderDate != null ? workOrderDate.value : "",
               vendorName: vendorName != null ? vendorName.value : "",
-              vendor_id: m_vendor_id != null ? m_vendor_id.value : "",
               pic: pic != null ? pic.value : "",
-              picId: pic_id != null ? pic_id.value : "",
               picEmail: email_pic != null ? email_pic.value : "",
               picPhone: phone_pic != null ? phone_pic.value : "",
               salesName: salesName != null ? salesName.value : "",
               salesId: m_employee_id != null ? m_employee_id.value : "",
-              referenceNo: reff_no != null ? reff_no.value : "",
-              referenceDoc: reference_url != null ? reference_url.value : "",
               service: service_name != null ? service_name.value : "",
               serviceId: m_service_id != null ? m_service_id.value : "",
-              serviceDetail: service_detail_name != null ? service_detail_name.value : "",
-              serviceDetailId: m_service_detail_id != null ? m_service_detail_id.value : "",
-              expectedDate: this.todayDate,
-              deliveryLocation: "",
-              deliveryLocationAddress: "",
+              serviceDetail:
+                service_detail_name != null ? service_detail_name.value : "",
+              serviceDetailId:
+                m_service_detail_id != null ? m_service_detail_id.value : "",
               remarks: remarks != null ? remarks.value : "",
-              code: "",
             };
+            console.log(this.headerData.m_vendor_contact_id)
 
             this.getTax();
             this.getSelectorVendorContacts();
             this.getSelectorEmployees();
+            await this.getDetailData(idData.value);
 
-            const { data } = await axios({
-              url: this.urlGet + "1216&id_1=" + idData.value ,
-              headers: {
-                Authorization: "Bearer " + this.token,
-              },
-            });
-
-            this.detailData = JSON.parse(JSON.stringify(data.data));
-            this.insertDetailData = JSON.parse(JSON.stringify(this.detailData));
+            const arr = this.headerData.reff_document.split(",");
+            this.fileUploadedArray = arr;
+            this.isLoading = false;
           } catch (err) {
-            console.log(err);
+            Toastify({
+              text: err,
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "red",
+                border: "1px solid red",
+              },
+            }).showToast();
+            this.isLoading = false;
           }
         },
 
         async getTax() {
           try {
-            const { data } = await axios({
-              url: this.urlGet + "1212&limit=300",
+            const dependency_id = "id";
+            const dependency_value = 0;
+            const id_query = 2563;
+            const page = 1;
+            const body = {
+              dependency_id,
+              dependency_value,
+              id_query,
+              page,
+            };
+            let resp = await fetch(this.mainUrl, {
+              method: "POST",
+              body: JSON.stringify(body),
               headers: {
-                Authorization: "Bearer " + this.token,
+                "Content-Type": "application/json",
               },
             });
-
-            const vat_wht_obj = Object.groupBy(data.data, ({ vat_wht_flag }) => vat_wht_flag);
+            if (resp.ok) {
+              resp = await resp.json();
+            } else {
+              resp = await resp.json();
+              throw resp;
+            }
+            const vat_wht_obj = Object.groupBy(
+              resp.data,
+              ({ vat_wht_flag }) => vat_wht_flag
+            );
             this.vat_data = vat_wht_obj.VAT;
             this.wht_data = vat_wht_obj.WHT;
-          } catch (error) {
-            console.log(err);
+          } catch (err) {
+            Toastify({
+              text: err,
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "red",
+                border: "1px solid red",
+              },
+            }).showToast();
+            this.isLoading = false;
           }
         },
 
-        async getSelectorEmployees(){
+        async getDetailData(id) {
           try {
-            const { data } = await axios({
-              url: this.urlGet + "1215&limit=300",
+            const dependency_id = "id_1";
+            const dependency_value = id;
+            const id_query = 2341;
+            const page = 1;
+            const body = {
+              dependency_id,
+              dependency_value,
+              id_query,
+              page,
+            };
+            let resp = await fetch(this.mainUrl, {
+              method: "POST",
+              body: JSON.stringify(body),
               headers: {
-                Authorization: "Bearer " + this.token,
+                "Content-Type": "application/json",
               },
             });
-            this.sales_data = data.data
+            if (resp.ok) {
+              resp = await resp.json();
+            } else {
+              resp = await resp.json();
+              throw resp;
+            }
+            this.detailData = JSON.parse(JSON.stringify(resp.data));
+
+            for (let i = 0; i < this.detailData.length; i++) {
+              const elem = this.detailData[i];
+              let numericValue = String(elem.unit_price).replace(/[^0-9]/g, "");
+              let separatedNumeric = numericValue.replace(
+                /\B(?=(\d{3})+(?!\d))/g,
+                "."
+              );
+              let var_total_amount =
+                Number(numericValue) *
+                Number(
+                  elem.frequency == null || elem.frequency == ""
+                    ? 1
+                    : elem.frequency
+                ) *
+                Number(elem.qty_1);
+              elem.unit_price = separatedNumeric;
+              elem.total_amount = this.formatPrice(var_total_amount);
+              for (const key in this.detailData[i]) {
+                if (this.detailData[i][key] == null) {
+                  this.detailData[i][key] = "";
+                }
+              }
+            }
+            this.insertDetailData = JSON.parse(JSON.stringify(this.detailData));
           } catch (err) {
-            console.log(err)
+            Toastify({
+              text: err,
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "red",
+                border: "1px solid red",
+              },
+            }).showToast();
+            this.isLoading = false;
+          }
+        },
+
+        async getSelectorEmployees() {
+          try {
+            const dependency_id = "id";
+            const dependency_value = 0;
+            const id_query = 2566;
+            const page = 1;
+            const body = {
+              dependency_id,
+              dependency_value,
+              id_query,
+              page,
+            };
+            let resp = await fetch(this.mainUrl, {
+              method: "POST",
+              body: JSON.stringify(body),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            if (resp.ok) {
+              resp = await resp.json();
+            } else {
+              resp = await resp.json();
+              throw resp;
+            }
+            this.sales_data = resp.data;
+          } catch (err) {
+            Toastify({
+              text: err,
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "red",
+                border: "1px solid red",
+              },
+            }).showToast();
+            this.isLoading = false;
           }
         },
 
         async getSelectorVendorContacts() {
           try {
-            const { data } = await axios({
-              url: this.urlGet + "1213&m_vendor_id=" + this.headerData.vendor_id + "&is_deleted=0",
+            const dependency_id = "m_vendor_id";
+            const dependency_value = this.headerData.m_vendor_bill_id;
+            const id_query = 2564;
+            const page = 1;
+            const body = {
+              dependency_id,
+              dependency_value,
+              id_query,
+              page,
+            };
+            let resp = await fetch(this.mainUrl, {
+              method: "POST",
+              body: JSON.stringify(body),
               headers: {
-                Authorization: "Bearer " + this.token,
+                "Content-Type": "application/json",
               },
             });
-            const picData = data.data.find((item) => item.is_primary == 1);
+            if (resp.ok) {
+              resp = await resp.json();
+            } else {
+              resp = await resp.json();
+              throw resp;
+            }
+            const picData = resp.data.find((item) => item.is_primary == 1);
             if (picData != undefined) {
               this.headerData.pic = `${picData.salutation} ${picData.name}`;
               this.headerData.picEmail = picData.email;
               this.headerData.picPhone = picData.phone;
             }
-            this.vendor_contact_data = data.data.map((item) => {
+            this.vendor_contact_data = resp.data.map((item) => {
               return {
                 id: item.id,
                 name: `${item.salutation} ${item.name}`,
                 email: item.email,
-                phone: item.phone
+                phone: item.phone,
               };
             });
           } catch (err) {
-            console.log(err);
+            Toastify({
+              text: err,
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "red",
+                border: "1px solid red",
+              },
+            }).showToast();
+            this.isLoading = false;
           }
         },
 
@@ -184,17 +366,181 @@
         },
 
         async submitData() {
-          let detailPayloads = [];
-          for (let i = 0; i < this.insertDetailData.length; i++) {
-            if (this.insertDetailData[i] != null) {
-              detailPayloads.push(this.detailData[i]);
+          try {
+            this.isLoading = true;
+            if(!this.headerData.m_vendor_contact_id){
+              throw 'Please Input PIC'
             }
+            let detailPayloads = [];
+            for (let i = 0; i < this.insertDetailData.length; i++) {
+              if (this.insertDetailData[i] != null) {
+                this.detailData[i].unit_price = Number(
+                  String(this.detailData[i].unit_price).replace(/[^0-9]/g, "")
+                );
+                if(this.detailData[i].unit_price == 0){
+                  throw 'Unit Price Must Be Greater Than Zero'
+                }
+                this.detailData[i].total_amount = Number(
+                  String(this.detailData[i].total_amount).replace(/[^0-9]/g, "")
+                );
+                this.detailData[i].m_tax_vat_id =
+                  this.detailData[i].m_tax_vat_id == null || this.detailData[i].m_tax_vat_id == ''
+                    ? 0
+                    : this.detailData[i].m_tax_vat_id;
+                this.detailData[i].m_tax_wht_id =
+                  this.detailData[i].m_tax_wht_id == null || this.detailData[i].m_tax_wht_id == ''
+                    ? 0
+                    : this.detailData[i].m_tax_wht_id;
+                const formObject = {
+                  t_job_order_id: this.headerData.t_job_order_id,
+                  m_vendor_bill_id: this.headerData.m_vendor_bill_id,
+                  insertBy: this.headerData.insert_by,
+                  "code<auto-numbering>": 151,
+                  delivery_location: this.headerData.delivery_location,
+                  delivery_location_address:
+                    this.headerData.delivery_location_address,
+                  expected_delivery_date:
+                    this.headerData.expected_delivery_date,
+                  reff_no: this.headerData.reff_no,
+                  m_vendor_contact_id: this.headerData.m_vendor_contact_id,
+                  reff_document:
+                    this.fileUploadedArray.length > 1
+                      ? this.fileUploadedArray.join(",")
+                      : this.headerData.reff_document,
+                  remarks: this.headerData.remarks,
+                  m_branch_id: this.userSession.branch_id
+                };
+                detailPayloads.push({ ...this.detailData[i], ...formObject });
+              }
+            }
+
+            if (detailPayloads.length < 1) {
+              throw "Please choose at least 1 Work Order Details";
+            }
+
+            // const formData = new FormData();
+            // formData.append("dataJson", JSON.stringify(detailPayloads));
+            // formData.append("t_job_order_id", this.headerData.t_job_order_id);
+            // formData.append(
+            //   "m_vendor_bill_id",
+            //   this.headerData.m_vendor_bill_id
+            // );
+            // formData.append("insertBy", this.headerData.insert_by);
+            // formData.append("code<auto-numbering>", 151);
+            // formData.append(
+            //   "delivery_location",
+            //   this.headerData.delivery_location
+            // );
+            // formData.append(
+            //   "delivery_location_address",
+            //   this.headerData.delivery_location_address
+            // );
+            // formData.append(
+            //   "expected_delivery_date",
+            //   this.headerData.expected_delivery_date
+            // );
+            // formData.append("reff_no", this.headerData.reff_no);
+            // formData.append(
+            //   "m_vendor_contact_id",
+            //   this.headerData.m_vendor_contact_id
+            // );
+            // formData.append("reff_document", this.headerData.reff_document);
+            let resp = await fetch(`${this.urlPost}?id_api=1229`, {
+              method: "POST",
+              body: JSON.stringify(detailPayloads),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            if (resp.ok) {
+              Toastify({
+                text: "Successfully create Data",
+                duration: 2000,
+                style: {
+                  background: "#fff",
+                  color: "green",
+                  border: "1px solid green",
+                },
+              }).showToast();
+              location.reload();
+            } else {
+              resp = resp.json();
+              throw 'Error';
+            }
+            this.isLoading = false;
+          } catch (err) {
+            Toastify({
+              text: err,
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "red",
+                border: "1px solid red",
+              },
+            }).showToast();
+            this.isLoading = false;
           }
-          console.log(this.headerData)
-          console.log(detailPayloads);
-          
-          const formData = new FormData()
-          // BIKIN FORM DULU
+        },
+        uploadFile() {
+          try {
+            console.log("uploading file");
+            this.isLoading = true;
+            const fileUpload = document.getElementById("file-input").files[0];
+
+            const formData = new FormData();
+            formData.append("file", fileUpload);
+
+            //TAMBAHIN BUCKET BARU UNTUK ISTAOPS
+            fetch("/api/storage/upload-file", {
+              body: formData,
+              method: "POST",
+            })
+              .then((res) => {
+                if (res.status >= 400) {
+                  Toastify({
+                    text: "Failed to upload file",
+                    duration: 2000,
+                    style: {
+                      background: "#fff",
+                      color: "red",
+                      border: "1px solid red",
+                    },
+                  }).showToast();
+                  return;
+                }
+
+                Toastify({
+                  text: "File has been uploaded",
+                  duration: 2000,
+                  style: {
+                    background: "#fff",
+                    color: "green",
+                    border: "1px solid green",
+                  },
+                }).showToast();
+                return res.json();
+              })
+              .then((res) => {
+                this.fileUploadedArray.push(res.data.url);
+                this.isLoading = false;
+              });
+          } catch (e) {
+            this.isLoading = false;
+            Toastify({
+              text: "Failed to upload file",
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "green",
+                border: "1px solid green",
+              },
+            }).showToast();
+            console.log("failed to upload file");
+          }
+        },
+        formatPrice(price) {
+          const formattedPrice = parseFloat(price).toLocaleString("id-ID");
+          return formattedPrice;
         },
         init() {
           this.initialization();
@@ -208,7 +554,17 @@
       <h1 class="mr-2 text-xs font-extrabold">></h1>
       <h1 class="mr-2 text-xs font-light">CREATE WORK ORDER</h1>
     </div>
-    <form @submit.prevent="submitData()">
+    <div x-show="isLoading" x-transition>
+      <div class="ph-row mt-0">
+        <template x-for="n in 10">
+          <div
+            class="ph-col-12 big ph-item"
+            style="margin: 5px !important; border-radius: 10px !important"
+          ></div>
+        </template>
+      </div>
+    </div>
+    <form @submit.prevent="submitData()" x-show="!isLoading">
       <div class="grid grid-cols-2">
         <div class="grid grid-rows-2 h-fit">
           <div class="flex flex-col text-sm my-2 px-5">
@@ -239,7 +595,10 @@
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2 required">PIC</label>
-            <select class="w-full border-2 rounded-xl py-1 px-3 text-base" x-model="headerData.picId" required @change="(e)=>{
+            <select
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              x-model="headerData.m_vendor_contact_id"
+              @change="(e)=>{
               if(e.target.value != ''){
                 const vendor = vendor_contact_data.find(item => item.id == e.target.value)
                 headerData.picPhone = vendor.phone ? vendor.phone : ''
@@ -248,10 +607,21 @@
                 headerData.picPhone = ''
                 headerData.picEmail = ''
               }
-            }">
-              <option value="" :selected="headerData.picId == ''"></option>
-              <template x-for="(contact, index) in vendor_contact_data" :key="index">
-                <option :value="contact.id" x-text="contact.name" :selected="contact.id == headerData.picId"></option>
+            }"
+            >
+              <option
+                value=""
+                :selected="headerData.m_vendor_contact_id == ''"
+              ></option>
+              <template
+                x-for="(contact, index) in vendor_contact_data"
+                :key="index"
+              >
+                <option
+                  :value="contact.id"
+                  x-text="contact.name"
+                  :selected="contact.id == headerData.m_vendor_contact_id"
+                ></option>
               </template>
             </select>
           </div>
@@ -273,20 +643,45 @@
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2 required">Sales Name</label>
-            <select class="w-full border-2 rounded-xl py-1 px-3 text-base" required>
+            <select
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              required
+            >
               <option value="" :selected="headerData.salesId == ''"></option>
               <template x-for="(sales, index) in sales_data" :key="index">
-                <option :value="sales.id" x-text="sales.name" :selected="sales.id == headerData.salesId"></option>
+                <option
+                  :value="sales.id"
+                  x-text="sales.name"
+                  :selected="sales.id == headerData.salesId"
+                ></option>
               </template>
             </select>
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2">Reference No</label>
-            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" x-model="headerData.referenceNo" />
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              x-model="headerData.reff_no"
+            />
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2">Reference Document</label>
-            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" type="file" />
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              type="file"
+              @change="uploadFile()"
+              id="file-input"
+            />
+            <template x-for="(file, index) in fileUploadedArray" :key="index">
+              <div class="border-2 px-2 mt-2 rounded-xl">
+                <button
+                  x-text="file"
+                  @click.prevent="()=>{
+                  window.open(file, '_blank').focus();
+                }"
+                ></button>
+              </div>
+            </template>
           </div>
         </div>
         <div class="grid grid-rows-2 h-fit">
@@ -312,7 +707,7 @@
               class="w-full border-2 rounded-xl py-1 px-3 text-base"
               x-model="todayDate"
               type="date"
-              x-model="headerData.expectedDate"
+              x-model="headerData.expected_delivery_date"
               required
             />
           </div>
@@ -321,7 +716,7 @@
             <textarea
               class="w-full border-2 rounded-xl py-1 px-3 text-base"
               rows="3"
-              x-model="headerData.deliveryLocation"
+              x-model="headerData.delivery_location"
               required
             ></textarea>
           </div>
@@ -330,7 +725,7 @@
             <textarea
               class="w-full border-2 rounded-xl py-1 px-3 text-base"
               rows="3"
-              x-model="headerData.deliveryLocationAddress"
+              x-model="headerData.delivery_location_address"
               required
             ></textarea>
           </div>
@@ -344,13 +739,19 @@
           </div>
           <div class="flex flex-col text-sm my-2 px-5">
             <label class="py-2">Work Order Code</label>
-            <input class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200" value="Auto Generated" disabled />
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              value="Auto Generated"
+              disabled
+            />
           </div>
         </div>
       </div>
       <!-- checkbox -->
       <div class="mx-5 mt-5 px-2 py-3 border-2">
-        <h1 class="text-lg font-semibold py-2 mb-4 pl-2 border-b-2">WORK ORDER DETAILS</h1>
+        <h1 class="text-lg font-semibold py-2 mb-4 pl-2 border-b-2">
+          WORK ORDER DETAILS
+        </h1>
         <div class="overflow-x-scroll overflow-scroll pb-5">
           <table class="table-auto w-full text-center">
             <thead>
@@ -365,11 +766,14 @@
                           for(let i = 0; i < checkboxes.length; i++){
                             checkboxes[i].checked = true
                           }
+                          detailData = JSON.parse(JSON.stringify(detailState));
+                          insertDetailData = JSON.parse(JSON.stringify(detailData));
                     }else if(!checkedAll){
                         let checkboxes = document.getElementsByName('checklist')
                           for(let i = 0; i < checkboxes.length; i++){
                             checkboxes[i].checked = false
                           }
+                          insertDetailData = []
                     }
                   }"
                     class="ml-5 w-5 h-5"
@@ -419,7 +823,9 @@
                   <td x-text="data.bill_type"></td>
                   <td x-text="data.currency_name"></td>
                   <td x-text="data.uom_name"></td>
-                  <td x-text="data.general_arrangement == 'Y'? 'YES' : 'NO'"></td>
+                  <td
+                    x-text="data.general_arrangement == 'Y'? 'YES' : 'NO'"
+                  ></td>
                   <td x-text="data.frequency"></td>
                   <td x-text="data.charge_type"></td>
                   <td>
@@ -434,9 +840,16 @@
                     insertDetailData[index].m_tax_vat_id = data.m_tax_vat_id
                   }"
                     >
-                      <option value="" :selected="data.m_tax_vat_id == null"></option>
+                      <option
+                        value=""
+                        :selected="data.m_tax_vat_id == null"
+                      ></option>
                       <template x-for="vat in vat_data" :key="vat.id">
-                        <option :value="vat.id" x-text="vat.name" :selected="data.m_tax_vat_id == vat.id"></option>
+                        <option
+                          :value="vat.id"
+                          x-text="vat.name"
+                          :selected="data.m_tax_vat_id == vat.id"
+                        ></option>
                       </template>
                     </select>
                   </td>
@@ -452,9 +865,16 @@
                     insertDetailData[index].m_tax_wht_id = data.m_tax_wht_id
                   }"
                     >
-                      <option value="" :selected="data.m_tax_wht_id == null"></option>
+                      <option
+                        value=""
+                        :selected="data.m_tax_wht_id == null"
+                      ></option>
                       <template x-for="wht in wht_data" :key="wht.id">
-                        <option :value="wht.id" x-text="wht.name" :selected="data.m_tax_wht_id == wht.id"></option>
+                        <option
+                          :value="wht.id"
+                          x-text="wht.name"
+                          :selected="data.m_tax_wht_id == wht.id"
+                        ></option>
                       </template>
                     </select>
                   </td>
@@ -463,11 +883,18 @@
                       :value="data.unit_price"
                       x-model="data.unit_price"
                       @keyup="()=>{
-                        data.total_amount = Number(data.unit_price) * Number(data.frequency) * Number(data.qty_1)
+                        data.unit_price = !data.unit_price ? '0' : data.unit_price
+                        let numericValue = String(data.unit_price).replace(/[^0-9]/g, '');
+                        let separatedNumeric = formatPrice(numericValue);
+                        let var_total_amount = Number(numericValue) * Number(data.frequency == null ||data.frequency == ''? 1 : data.frequency) * Number(data.qty_1)
+                        data.unit_price = separatedNumeric;
+                        data.total_amount = formatPrice(var_total_amount)
                         insertDetailData[index].total_amount = data.total_amount
                     }"
-                      type="number"
+                      type="text"
+                      onwheel="return false;"
                       class="w-full border-2 rounded-lg p-2 text-base"
+                      required
                     />
                   </td>
                   <td x-text="data.qty_1"></td>
@@ -479,7 +906,12 @@
         </div>
       </div>
       <div class="flex flex-rows p-5">
-        <button class="px-3 py-2 bg-blue-400 rounded-xl hover:bg-blue-600 text-white" type="submit">Save</button>
+        <button
+          class="px-3 py-2 bg-blue-400 rounded-xl hover:bg-blue-600 text-white"
+          type="submit"
+        >
+          Save
+        </button>
       </div>
     </form>
   </div>

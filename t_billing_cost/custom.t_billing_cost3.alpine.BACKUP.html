@@ -1,0 +1,870 @@
+<body>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/placeholder-loading/dist/css/placeholder-loading.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js" type="text/javascript"></script>
+
+  <style>
+    [x-cloak] {
+      display: none;
+    }
+
+    td {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+      min-width: 120px;
+    }
+    th {
+      padding-top: 15px;
+      padding-bottom: 15px;
+      padding-right: 15px;
+    }
+  </style>
+  <script>
+    function main() {
+      return {
+        isLoading: false,
+        //URL
+        urlGet: "",
+        urlPost: "",
+        userSession: {},
+        token: "",
+
+        // State
+        checkedAll: true,
+        headerData: {},
+        detailData: [],
+        insertHeaderData: {},
+        insertDetailData: [],
+        detailDataIds: [],
+
+        urlArray: [],
+        vatTaxDetailData: [],
+        whtDetailData: [],
+        linenum999: {},
+
+        async initialization() {
+          try {
+            this.isLoading = true;
+            this.checkedAll = true;
+            this.mainUrl = "/api/getqueryvalues";
+            this.urlPost = "/api/global-api-post-multiple-tunnel";
+            this.userSession = JSON.parse(localStorage.getItem("user"));
+            this.token = localStorage.getItem("ads_token");
+
+            const idData = document.querySelector("#id");
+            const jobOrderCode = document.querySelector("#code");
+            const jobOrderDate = document.querySelector("#job_order_date");
+            const vendorName = document.querySelector("#vendor_name");
+            const salesName = document.querySelector("#sales_name");
+            const serviceName = document.querySelector("#service_name");
+            const serviceDetailName = document.querySelector("#service_detail_name");
+            const projectName = document.querySelector("#project_name");
+            const reffNo = document.querySelector("#reff_no");
+            const referenceUrl = document.querySelector("#reference_url");
+            const remarks = document.querySelector("#remarks");
+            const m_vendor_id = document.querySelector("#m_vendor_id");
+            const employee_id = document.querySelector("#employee_id");
+            const m_project_id = document.querySelector("#m_project_id");
+            const m_service_id = document.querySelector("#m_service_id");
+            const m_service_detail_id = document.querySelector("#m_service_detail_id");
+            const customerName = document.querySelector("#customer_name");
+            const customerId = document.querySelector("#m_customer_id");
+            const billType = document.querySelector("#bill_type");
+            const workOrderId = document.querySelector("#work_order_id");
+            const chargeType = document.querySelector("#charge_type");
+
+            // URL
+            document.getElementById("cancel-button-child").style.display = "none";
+
+            this.headerData = {
+              jobOrderId: idData != null ? idData.value : "",
+              jobOrderCode: jobOrderCode != null ? jobOrderCode.value : "",
+              jobOrderDate: jobOrderDate != null ? jobOrderDate.value : "",
+              vendor_name: vendorName != null ? vendorName.value : "",
+              sales_name: salesName != null ? salesName.value : "",
+              service_name: serviceName != null ? serviceName.value : "",
+              service_detail_name: serviceDetailName != null ? serviceDetailName.value : "",
+              project_name: projectName != null ? projectName.value : "",
+              reff_no: reffNo != null ? reffNo.value : "",
+              remarks: remarks != null ? remarks.value : "",
+              referenceUrl: referenceUrl != null ? referenceUrl.value : "",
+              m_vendor_id: m_vendor_id != null ? m_vendor_id.value : "",
+              employee_id: employee_id != null ? employee_id.value : "",
+              m_project_id: m_project_id != null ? m_project_id.value : "",
+              m_service_id: m_service_id != null ? m_service_id.value : "",
+              m_service_detail_id: m_service_detail_id != null ? m_service_detail_id.value : "",
+              customer_name: customerName != null ? customerName.value : "",
+              m_customer_id: customerId != null ? customerId.value : "",
+              bill_type: billType != null ? billType.value : "",
+              work_order_id: workOrderId != null ? workOrderId.value : "",
+              charge_type: chargeType != null ? chargeType.value : ""
+            };
+
+            this.urlArray = this.headerData.referenceUrl.split(',')
+            await this.getDetailData();
+            this.taxBuilder();
+            this.isLoading = false;
+          } catch (err) {
+            Toastify({
+              text: err,
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "red",
+                border: "1px solid red",
+              },
+            }).showToast();
+            console.log(err)
+            this.isLoading = false;
+          }
+        },
+
+        async getDetailData() {
+          try {
+            const dependency_id = "job_order_id";
+            const dependency_value = this.headerData.jobOrderId;
+            const id_query = this.headerData.bill_type == 'AP' ? 2518 : 2653;
+            const page = 1;
+            const body = {
+              dependency_id,  
+              dependency_value,
+              id_query,
+              page,
+            };
+
+            let resp = await fetch(this.mainUrl, {
+              method: "POST",
+              body: JSON.stringify(body),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            if (resp.ok) {
+              resp = await resp.json();
+            } else {
+              resp = await resp.json();
+              throw resp;
+            }
+            this.detailData = resp.data.filter(item => item.charge_type == this.headerData.charge_type)
+            this.insertDetailData = JSON.parse(JSON.stringify(this.detailData));
+          } catch (err) {
+            Toastify({
+              text: err,
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "red",
+                border: "1px solid red",
+              },
+            }).showToast();
+            console.log(err)
+            this.isLoading = false;
+          }
+        },
+
+        taxBuilder() {
+          let detailDataLocal = [];
+          for (let i = 0; i < this.insertDetailData.length; i++) {
+            const el = this.insertDetailData[i];
+            if (el !== null) {
+              detailDataLocal.push(el);
+            }
+          }
+          this.whtDetailData = [];
+          this.vatTaxDetailData = [];
+
+          //VAT TAX
+          const vat_obj = Object.groupBy(detailDataLocal, ({ m_tax_vat_id }) => m_tax_vat_id);
+          for (const key in vat_obj) {
+            if (key == null || key == undefined || key == "" || key == "null") {
+              continue;
+            }
+            let obj = {
+              linenum: 997,
+              activity_flag: "Cost",
+              charge_name: vat_obj[key][0].vat_tax_name,
+              charge_type: vat_obj[key][0].charge_type,
+              bill_type: vat_obj[key][0].bill_type,
+              remark: vat_obj[key][0].vat_tax_name,
+              currency_code: this.detailData[0].currency_code,
+              frequency: 1,
+              general_arrangement: 'N',
+              id: 0,
+              m_charge_id: vat_obj[key][0].m_charge_id,
+              m_currency_id: 0,
+              m_tax_vat_id: 0,
+              m_tax_wht_id: 0,
+              m_uom_id: 0,
+              price: null,
+              quantity: 1,
+              uom_name: null,
+              vat_ie_flag: null,
+              vat_tax_name: null,
+              vat_tax_value: null,
+              vendor_name: null,
+              wht_ie_flag: null,
+              wht_tax_name: null,
+              wht_tax_value: null,
+              skada: vat_obj[key][0].coa_income_tax,
+              coa_income_tax: null,
+              coa_output_tax: null,
+              coa_reimburse: null,
+              customer_name: null,
+              vendor_coa: null,
+              m_vendor_id: 0,
+              m_customer_id: 0,
+              work_order_id: null,
+              branch_id: 0,
+              frequency: 1,
+              total_amount: 0,
+              total_amount_show: 0
+            };
+            const data = vat_obj[key];
+            let sum = 0;
+            let totalTaxAmount = data.reduce(function (acc, obj) {
+              const frequency =
+                obj.frequency == null || obj.frequency == "" || obj.frequency == undefined || obj.frequency == 0
+                  ? 1
+                  : Number(obj.frequency);
+              let taxValue = obj.vat_tax_value;
+              let taxSum = 0;
+              if (taxValue === 0) {
+                taxSum = 0;
+              } else {
+                taxSum = Number(obj.price) * frequency * Number(obj.quantity) * (taxValue / 100);
+              }
+              return acc + Math.round(taxSum);
+            }, 0);
+            obj.total_amount = totalTaxAmount;
+            obj.total_amount_show = this.formatPrice(totalTaxAmount)
+            this.vatTaxDetailData.push(obj);
+          }
+
+          // WHT TAX
+          const wht_obj = Object.groupBy(detailDataLocal, ({ m_tax_wht_id }) => m_tax_wht_id);
+
+          for (const key in wht_obj) {
+            if (key == null || key == undefined || key == "" || key == "null") {
+              continue;
+            }
+
+            let obj = {
+              linenum: 998,
+              activity_flag: "Cost",
+              charge_name: wht_obj[key][0].wht_tax_name,
+              charge_type: wht_obj[key][0].charge_type,
+              bill_type: wht_obj[key][0].bill_type,
+              remark: wht_obj[key][0].wht_tax_name,
+              currency_code: this.detailData[0].currency_code,
+              frequency: 1,
+              general_arrangement: 'N',
+              id: 0,
+              m_charge_id: wht_obj[key][0].m_charge_id,
+              m_currency_id: 0,
+              m_tax_vat_id: 0,
+              m_tax_wht_id: 0,
+              m_uom_id: 0,
+              price: null,
+              quantity: 1,
+              uom_name: null,
+              vat_ie_flag: null,
+              vat_tax_name: null,
+              vat_tax_value: null,
+              vendor_name: null,
+              wht_ie_flag: null,
+              wht_tax_name: null,
+              wht_tax_value: null,
+              skada: wht_obj[key][0].coa_output_tax,
+              coa_income_tax: null,
+              coa_output_tax: null,
+              coa_reimburse: null,
+              customer_name: null,
+              vendor_coa: null,
+              m_vendor_id: 0,
+            m_customer_id: 0,
+              work_order_id: null,
+              branch_id: 0,
+              frequency: 1,
+              total_amount: 0,
+              total_amount_show: 0
+            };
+            const data = wht_obj[key];
+            let sum = 0;
+            let totalTaxAmount = data.reduce(function (acc, obj) {
+              const frequency =
+                obj.frequency == null || obj.frequency == "" || obj.frequency == undefined || obj.frequency == 0
+                  ? 1
+                  : Number(obj.frequency);
+              let taxValue = obj.wht_tax_value;
+              let taxSum = 0;
+              if (taxValue === 0) {
+                taxSum = 0;
+              } else {
+                taxSum = Number(obj.price) * frequency * Number(obj.quantity) * (taxValue / 100);
+              }
+              return acc + Math.round(taxSum);
+            }, 0);
+            obj.total_amount = totalTaxAmount;
+            obj.total_amount_show = this.formatPrice(totalTaxAmount)
+            this.whtDetailData.push(obj);
+          }
+          for (let i = 0; i < this.insertDetailData.length; i++) {
+            const el = this.insertDetailData[i];
+            // Check IE Flag
+            if (el !== null) {
+              const frequency =
+                el.frequency == null || el.frequency == "" || el.frequency == undefined ? 1 : Number(el.frequency);
+              let total = Number(el.price) * Number(el.quantity) * frequency;
+              let vatVal = el.vat_tax_value;
+              let whtVal = el.wht_tax_value;
+              // if (el.wht_ie_flag == "I") {
+              //   total = total - total * (whtVal / 100);
+              // }
+
+              if (el.vat_ie_flag == "I") {
+                total = total - total * (vatVal / 100);
+              }
+              el.total_amount = Math.round(total);
+              this.detailData[i].total_amount = Math.round(total);
+              this.detailData[i].skada = this.detailData[i].charge_type == 'NRI' ? this.detailData[i].coa_cost : this.detailData[i].coa_reimburse
+              this.detailData[i].coa_cost = this.detailData[i].skada
+              this.detailData[i].total_amount_show = this.formatPrice(Math.round(total))
+              this.detailData[i].price_show = this.formatPrice(this.detailData[i].price)
+            }
+          }
+
+          //TOTAL HUTANG
+          this.linenum999 = {
+            linenum: 999,
+            activity_flag: "Cost",
+            charge_name: "TOTAl HUTANG",
+            charge_type: this.detailData[0].charge_type,
+            bill_type: this.detailData[0].bill_type,
+            remark: "TOTAl HUTANG",
+            currency_code:  this.detailData[0].currency_code,
+            frequency: 1,
+            general_arrangement: 'N',
+            id: 0,
+            m_charge_id: 0,
+            m_currency_id: 0,
+            m_tax_vat_id: 0,
+            m_tax_wht_id: 0,
+            m_uom_id: 0,
+            price: null,
+            quantity: 1,
+            uom_name: null,
+            vat_ie_flag: null,
+            vat_tax_name: null,
+            vat_tax_value: null,
+            vendor_name: null,
+            wht_ie_flag: null,
+            wht_tax_name: null,
+            wht_tax_value: null,
+            skada: this.headerData.bill_type == "AP" ? this.detailData[0].vendor_coa : "08100",
+            coa_income_tax: null,
+            coa_output_tax: null,
+            coa_reimburse: null,
+            customer_name: null,
+            vendor_coa: null,
+            m_vendor_id: 0,
+            m_customer_id: 0,
+            work_order_id: null,
+            branch_id: 0,
+            frequency: 1,
+            total_amount: 0,
+            total_amount_show: 0
+          };
+
+          const detailDataReduce = detailDataLocal.reduce((acc, obj) => {
+            return acc + Number(obj.total_amount);
+          }, 0);
+          const vatDataReduce = this.vatTaxDetailData.reduce((acc, obj) => {
+            return acc + Number(obj.total_amount);
+          }, 0);
+          const whtDataReduce = this.whtDetailData.reduce((acc, obj) => {
+            return acc + Number(obj.total_amount);
+          }, 0);
+          this.linenum999.total_amount = detailDataReduce + vatDataReduce - whtDataReduce;
+          this.linenum999.total_amount_show = this.formatPrice(this.linenum999.total_amount)
+        },
+
+        async submitToDatabase() {
+          try {
+            this.isLoading = true;
+            let headerPayload = this.headerData;
+            let detailPayload = [];
+            const headerObject = {
+              job_order_id: headerPayload.jobOrderId,
+              "code<auto-numbering>": this.headerData.bill_type == 'AP' ? 168 : 175,
+              job_order_date: headerPayload.jobOrderDate,
+              employee_id: headerPayload.employee_id,
+              reference_url: this.urlArray.join(','),
+              reference_no: headerPayload.reff_no,
+              remarks: headerPayload.remarks,
+              m_project_id: headerPayload.m_project_id,
+              m_service_id: headerPayload.m_service_id,
+              m_service_detail_id: headerPayload.m_service_detail_id,
+              insert_by: this.userSession.username,
+              branch_id: this.userSession.branch_id,
+              work_order_id: this.headerData.work_order_id == '' || this.headerData.work_order_id == null ? 0 : this.headerData.work_order_id,
+              total_amount_show: null,
+              coa_cost: this.headerData.bill_type == 'NRI'? this.headerData.coa_cost : this.headerData.coa_reimburse,
+              skada: null
+            };
+            for (let i = 0; i < this.insertDetailData.length; i++) {
+              const el = this.insertDetailData[i];
+              if (el !== null) {
+                if(el.price == 0){
+                  throw 'Price must be greater than zero'
+                }
+                el.general_arrangement = el.general_arrangement === "Yes" ? "Y" : "N";
+                el.m_tax_wht_id = el.m_tax_wht_id == null ? 0 : el.m_tax_wht_id;
+                el.m_tax_vat_id = el.m_tax_vat_id == null ? 0 : el.m_tax_vat_id;
+                el.id = el.id == null ? 0 : el.id;
+                el.m_vendor_id =  this.headerData.m_vendor_id == '' || this.headerData.m_vendor_id == null  ? 0 : this.headerData.m_vendor_id,
+                el.m_customer_id = this.headerData.m_customer_id == '' || this.headerData.m_customer_id == null ? 0 : this.headerData.m_customer_id,
+                el.frequency = el.frequency == null || el.frequency == '' ? 1 : el.frequency
+                detailPayload.push({ ...headerObject, ...el });
+              }
+            }
+            if (detailPayload.length < 1) {
+              throw "Please select one detail data";
+            }
+            detailPayload.forEach((el, i) => {
+              el.linenum = i + 1;
+            });
+            this.vatTaxDetailData.forEach((item) => {
+              item.total_amount = item.total_amount == null ? 0 : item.total_amount
+              item.price = item.price == null ? 0 : item.price
+              item.coa_cost = item.skada
+              detailPayload.push({ ...headerObject, ...item });
+            });
+            this.whtDetailData.forEach((item) => {
+              item.total_amount = item.total_amount == null ? 0 : item.total_amount
+              item.price = item.price == null ? 0 : item.price
+              item.coa_cost = item.skada
+              detailPayload.push({ ...headerObject, ...item });
+            });
+            this.linenum999.total_amount = this.linenum999.total_amount == null ? 0 : this.linenum999.total_amount
+            this.linenum999.price = this.linenum999.price == null ? 0 : this.linenum999.price
+            this.linenum999.coa_cost = this.linenum999.skada == null ? 0 : this.linenum999.skada
+            detailPayload.push({ ...headerObject, ...this.linenum999 });
+            // const formData = new FormData();
+            // formData.append("dataJSON", JSON.stringify(detailPayload));
+            // formData.append("id", headerPayload.jobOrderId);
+            // formData.append("code<auto-numbering>", 168);
+            // formData.append("job_order_date", headerPayload.jobOrderDate);
+            // formData.append("m_vendor_id", headerPayload.m_vendor_id);
+            // formData.append("employee_id", headerPayload.employee_id);
+            // formData.append("reference_url", headerPayload.referenceUrl);
+            // formData.append("reference_no", headerPayload.reff_no);
+            // formData.append("remarks", headerPayload.remarks);
+            // formData.append("m_project_id", headerPayload.m_project_id);
+            // formData.append("m_service_id", headerPayload.m_service_id);
+            // formData.append(
+            //   "m_service_detail_id",
+            //   headerPayload.m_service_detail_id
+            // );
+            // formData.append("insert_by", this.userSession.username);
+            const url = this.urlPost + "?id_api=1197";
+            let resp = await fetch(url, {
+              method: "POST",
+              body: JSON.stringify(detailPayload),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            if (resp.ok) {
+              resp = await resp.json();
+            } else {
+              resp = await resp.json();
+              throw resp;
+            }
+            Toastify({
+              text: "Successfully Create Data",
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "green",
+                border: "1px solid green",
+              },
+            }).showToast();
+            const timeout = setTimeout(()=>{
+              this.isLoading = false;
+              location.reload()
+            }, 1000);
+          } catch (err) {
+            Toastify({
+              text: err,
+              duration: 2000,
+              style: {
+                background: "#fff",
+                color: "red",
+                border: "1px solid red",
+              },
+            }).showToast();
+            console.log(err)
+            this.isLoading = false;
+          }
+        },
+        formatPrice(price) {
+          const formattedPrice = parseFloat(price).toLocaleString("id-ID");
+          return formattedPrice;
+        },
+        checkboxChecking() {
+          let checkboxes = document.getElementsByName("checklist");
+          let flag = true;
+          for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked == false ? (flag = false) : null;
+          }
+          this.checkedAll = flag;
+        },
+        init() {
+          this.initialization();
+        },
+      };
+    }
+  </script>
+  <div x-data="main()">
+    <div class="flex flex-rows mx-5">
+      <h1 class="mr-2 text-xs font-light">FINANCIAL</h1>
+      <h1 class="mr-2 text-xs font-extrabold">></h1>
+      <h1 class="mr-2 text-xs font-light">WORK ORDER BILLING COST</h1>
+      <h1 class="mr-2 text-xs font-extrabold">></h1>
+      <h1 class="mr-2 text-xs font-light">CREATE WORK ORDER BILLING COST</h1>
+    </div>
+    <form x-show="isLoading != true">
+      <div class="grid grid-cols-2">
+        <div class="grid grid-rows-2 h-fit">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Job Order Code</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.jobOrderCode"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Job Order Date</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.jobOrderDate"
+              disabled
+            />
+          </div>
+          <div x-show="headerData.bill_type == 'AP'" class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Vendor</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.vendor_name"
+              disabled
+            />
+          </div>
+          <div x-show="headerData.bill_type == 'ADV'" class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Customer</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.customer_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Sales Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.sales_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference Document</label>
+            <template x-show="urlArray[0].length > 1? true : false" x-for="(url, index) in urlArray" :key="index">
+              <button
+              x-show="urlArray[0].length > 1? true : false"
+              @click="(e)=>{
+                e.preventDefault()
+                window.open(url)
+              }"
+              x-text="url"
+              class="px-2 border-2 rounded-xl mt-2"
+              ></button>
+            </template>
+            <p x-show="urlArray[0].length > 1? false : true" class="text-sm bg-gray-200 p-2 rounded-xl">
+              Reference Data Not Found
+            </p>
+          </div>
+        </div>
+        <div class="grid grid-rows-2 h-fit">
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.service_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Service Detail Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              type="text"
+              x-model="headerData.service_detail_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Project Name</label>
+            <input
+              class="w-full border-2 rounded-xl py-1 px-3 text-base bg-gray-200"
+              x-model="headerData.project_name"
+              disabled
+            />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Reference No</label>
+            <input class="w-full border-2 rounded-xl py-1 px-3 text-base" x-model="headerData.reff_no" />
+          </div>
+          <div class="flex flex-col text-sm my-2 px-5">
+            <label class="py-2">Remarks</label>
+            <textarea
+              class="w-full border-2 rounded-xl py-1 px-3 text-base"
+              rows="3"
+              x-model="headerData.remarks"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </form>
+    <!-- checkbox -->
+    <div class="mx-5 mt-5 px-2 py-3 border-2" x-show="isLoading != true">
+      <h1 class="text-lg font-semibold py-2 mb-4 border-b-2">Billing Details</h1>
+      <div class="overflow-x-scroll overflow-scroll pb-5">
+        <table class="table-auto w-full text-center">
+          <thead>
+            <tr class="bg-gray-200 text-base">
+              <th>
+                <input
+                  x-model="checkedAll"
+                  @change="()=>{
+                  if(checkedAll){
+                    let checkboxes = document.getElementsByName('checklist');
+                    for (let i = 0; i < checkboxes.length; i++) {
+                      checkboxes[i].checked = true
+                    }
+                    insertDetailData = JSON.parse(JSON.stringify(detailData));
+                    taxBuilder()
+                  }else {
+                    let checkboxes = document.getElementsByName('checklist');
+                    for (let i = 0; i < checkboxes.length; i++) {
+                      checkboxes[i].checked = false
+                    }
+                    insertDetailData = []
+                    vatTaxDetailData = []
+                    whtDetailData = []
+                    linenum999.total_amount = 0 
+                  }
+                  
+                }"
+                  type="checkbox"
+                  class="ml-5 w-5 h-5"
+                />
+              </th>
+              <th>Linenum</th>
+              <th>Activity Flag</th>
+              <th>Charge</th>
+              <th>Charge Type</th>
+              <th>Bill Type</th>
+              <th>Remarks</th>
+              <th>Currency</th>
+              <th>Frequency</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Total Amount</th>
+              <th>SKADA</th>
+              <th>DK</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="(data, index) in detailData" :key="index">
+              <tr class="hover:bg-gray-100">
+                <td x-data="isChecked = true">
+                  <input
+                    type="checkbox"
+                    name="checklist"
+                    x-model="isChecked"
+                    @change="()=>{
+                    if(isChecked){
+                      insertDetailData[index] = data
+                      checkboxChecking()
+                      taxBuilder()
+                    }else {
+                      insertDetailData[index] = null
+                      checkedAll = false
+                      taxBuilder()
+                    }
+                    
+                  }"
+                    class="ml-5 w-5 h-5"
+                  />
+                </td>
+                <td x-text="index+1"></td>
+                <td x-text="data.activity_flag"></td>
+                <td x-text="data.charge_name"></td>
+                <td x-text="data.charge_type"></td>
+                <td x-text="data.bill_type"></td>
+                <td>
+                  <input
+                    type="text"
+                    x-model="data.remark"
+                    class="w-full border-2 rounded-lg p-2 text-base"
+                    @keyup="()=>{
+                      if(isChecked == true){
+                        if(insertDetailData[index] != null){
+                          insertDetailData[index].remark = data.remark
+                        }
+                      }
+                  }"
+                  />
+                </td>
+                <td x-text="data.currency_code"></td>
+                <td x-text="data.frequency"></td>
+                <td>
+                  <input
+                    type="text"
+                    :value="data.price_show"
+                    x-model="data.price_show"
+                    @keyup="()=>{
+                      data.price_show = !data.price_show ? '0' : data.price_show
+                      let numericValue = data.price_show.replace(/[^0-9]/g, '');
+                      let separatedNumeric = formatPrice(numericValue)
+                      data.price_show = numericValue == null ? 0 : separatedNumeric
+                      data.price = Number(numericValue)
+                      const frequency = data.frequency == null || data.frequency == '' || data.frequency == undefined ? 1 : Number(data.frequency);
+                      let total = Number(data.price) * Number(data.quantity) * frequency
+                      let vatVal = data.vat_tax_value;
+                      let whtVal = data.wht_tax_value;
+                      
+                      if (data.vat_ie_flag == 'I') {
+                        total = total - (total * (vatVal / 100));
+                      }
+                      data.total_amount = Math.round(total);
+                      if(insertDetailData[index] != null){
+                            insertDetailData[index].price = data.price
+                            insertDetailData[index].total_amount = data.total_amount
+                            taxBuilder()
+                        }
+                }"
+                    class="w-full border-2 rounded-lg p-2 text-base"
+                  />
+                </td>
+                <td x-text="data.quantity"></td>
+                <td x-text="data.total_amount_show"></td>
+                <td x-text="data.skada"></td>
+                <td>D</td>
+              </tr>
+            </template>
+            <template x-for="(data, index) in vatTaxDetailData" :key="index">
+              <tr class="hover:bg-gray-100">
+                <td></td>
+                <td x-text="data.linenum"></td>
+                <td x-text="data.activity_flag"></td>
+                <td x-text="data.charge_name"></td>
+                <td x-text="data.charge_type"></td>
+                <td x-text="data.bill_type"></td>
+                <td>
+                  <input
+                    type="text"
+                    x-model="data.remark"
+                    class="w-full border-2 rounded-lg p-2 text-base"
+                    @keyup="()=>{
+                      if(insertDetailData[index] != null){
+                        vatTaxDetailData[index].remark = data.remark
+                      }
+                  }"
+                  />
+                </td>
+                <td x-text="data.currency_code"></td>
+                <td x-text="data.frequency"></td>
+                <td></td>
+                <td>1</td>
+                <td x-text="data.total_amount_show"></td>
+                <td x-text="data.skada"></td>
+                <td>D</td>
+              </tr>
+            </template>
+            <template x-for="(data, index) in whtDetailData" :key="index">
+              <tr class="hover:bg-gray-100">
+                <td></td>
+                <td x-text="data.linenum"></td>
+                <td x-text="data.activity_flag"></td>
+                <td x-text="data.charge_name"></td>
+                <td x-text="data.charge_type"></td>
+                <td x-text="data.bill_type"></td>
+                <td>
+                  <input
+                    type="text"
+                    x-model="data.remark"
+                    class="w-full border-2 rounded-lg p-2 text-base"
+                    @keyup="()=>{
+                      if(insertDetailData[index] != null){
+                        whtDetailData[index].remark = data.remark
+                      }
+                  }"
+                  />
+                </td>
+                <td x-text="data.currency_code"></td>
+                <td x-text="data.frequency"></td>
+                <td></td>
+                <td>1</td>
+                <td x-text="data.total_amount_show"></td>
+                <td x-text="data.skada"></td>
+                <td>K</td>
+              </tr>
+            </template>
+            <tr class="hover:bg-gray-100" x-data="linenum999">
+              <td></td>
+              <td x-text="linenum999.linenum"></td>
+              <td x-text="linenum999.activity_flag"></td>
+              <td x-text="linenum999.charge_name"></td>
+              <td x-text="linenum999.charge_type"></td>
+              <td x-text="linenum999.bill_type"></td>
+              <td>
+                <input type="text" x-model="linenum999.remark" class="w-full border-2 rounded-lg p-2 text-base" />
+              </td>
+              <td x-text="linenum999.currency_code"></td>
+              <td x-text="linenum999.frequency"></td>
+              <td></td>
+              <td>1</td>
+              <td x-text="linenum999.total_amount_show"></td>
+              <td x-text="linenum999.skada"></td>
+              <td>K</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div x-show="isLoading" x-transition>
+      <div class="ph-row mt-0">
+        <template x-for="n in 10">
+          <div class="ph-col-12 big ph-item" style="margin: 5px !important; border-radius: 10px !important"></div>
+        </template>
+      </div>
+    </div>
+    <div class="flex flex-rows p-5">
+      <button
+        class="px-3 py-2 bg-blue-400 rounded-xl hover:bg-blue-600 text-white"
+        @click="(e)=> {
+          e.preventDefault()
+          submitToDatabase()}"
+      >
+        Save
+      </button>
+    </div>
+  </div>
+</body>

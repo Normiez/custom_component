@@ -129,7 +129,6 @@
                 m_service_detail_id != null ? m_service_detail_id.value : "",
               remarks: remarks != null ? remarks.value : "",
             };
-            console.log(this.headerData.m_vendor_contact_id)
 
             this.getTax();
             this.getSelectorVendorContacts();
@@ -141,7 +140,7 @@
             this.isLoading = false;
           } catch (err) {
             Toastify({
-              text: err,
+              text: err.message.message,
               duration: 2000,
               style: {
                 background: "#fff",
@@ -186,7 +185,7 @@
             this.wht_data = vat_wht_obj.WHT;
           } catch (err) {
             Toastify({
-              text: err,
+              text: err.message.message,
               duration: 2000,
               style: {
                 background: "#fff",
@@ -227,7 +226,7 @@
 
             for (let i = 0; i < this.detailData.length; i++) {
               const elem = this.detailData[i];
-              let numericValue = String(elem.unit_price).replace(/[^0-9]/g, "");
+              let numericValue = elem.unit_price.replace(/[^0-9]/g, "");
               let separatedNumeric = numericValue.replace(
                 /\B(?=(\d{3})+(?!\d))/g,
                 "."
@@ -251,7 +250,7 @@
             this.insertDetailData = JSON.parse(JSON.stringify(this.detailData));
           } catch (err) {
             Toastify({
-              text: err,
+              text: err.message.message,
               duration: 2000,
               style: {
                 background: "#fff",
@@ -291,7 +290,7 @@
             this.sales_data = resp.data;
           } catch (err) {
             Toastify({
-              text: err,
+              text: err.message.message,
               duration: 2000,
               style: {
                 background: "#fff",
@@ -344,7 +343,7 @@
             });
           } catch (err) {
             Toastify({
-              text: err,
+              text: err.message.message,
               duration: 2000,
               style: {
                 background: "#fff",
@@ -368,20 +367,14 @@
         async submitData() {
           try {
             this.isLoading = true;
-            if(!this.headerData.m_vendor_contact_id){
-              throw 'Please Input PIC'
-            }
             let detailPayloads = [];
             for (let i = 0; i < this.insertDetailData.length; i++) {
               if (this.insertDetailData[i] != null) {
                 this.detailData[i].unit_price = Number(
-                  String(this.detailData[i].unit_price).replace(/[^0-9]/g, "")
+                  this.detailData[i].unit_price.replace(/[^0-9]/g, "")
                 );
-                if(this.detailData[i].unit_price == 0){
-                  throw 'Unit Price Must Be Greater Than Zero'
-                }
                 this.detailData[i].total_amount = Number(
-                  String(this.detailData[i].total_amount).replace(/[^0-9]/g, "")
+                  this.detailData[i].total_amount.replace(/[^0-9]/g, "")
                 );
                 this.detailData[i].m_tax_vat_id =
                   this.detailData[i].m_tax_vat_id == null || this.detailData[i].m_tax_vat_id == ''
@@ -408,7 +401,6 @@
                       ? this.fileUploadedArray.join(",")
                       : this.headerData.reff_document,
                   remarks: this.headerData.remarks,
-                  m_branch_id: this.userSession.branch_id
                 };
                 detailPayloads.push({ ...this.detailData[i], ...formObject });
               }
@@ -462,10 +454,17 @@
                   border: "1px solid green",
                 },
               }).showToast();
-              location.reload();
+              await this.initialization();
+              let checkboxes = document.getElementsByName("checklist");
+              for (let i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = true;
+              }
+              if (this.detailData.length < 1) {
+                location.reload();
+              }
             } else {
               resp = resp.json();
-              throw 'Error';
+              throw resp.message.message;
             }
             this.isLoading = false;
           } catch (err) {
@@ -883,9 +882,8 @@
                       :value="data.unit_price"
                       x-model="data.unit_price"
                       @keyup="()=>{
-                        data.unit_price = !data.unit_price ? '0' : data.unit_price
-                        let numericValue = String(data.unit_price).replace(/[^0-9]/g, '');
-                        let separatedNumeric = formatPrice(numericValue);
+                        let numericValue = data.unit_price.replace(/[^0-9]/g, '');
+                        let separatedNumeric = numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
                         let var_total_amount = Number(numericValue) * Number(data.frequency == null ||data.frequency == ''? 1 : data.frequency) * Number(data.qty_1)
                         data.unit_price = separatedNumeric;
                         data.total_amount = formatPrice(var_total_amount)

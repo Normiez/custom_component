@@ -1,0 +1,1026 @@
+<html>
+  <head>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"
+    ></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+  </head>
+  <body>
+    <script
+      src="https://cdn.jsdelivr.net/npm/toastify-js"
+      type="text/javascript"
+    ></script>
+    <script>
+      function formState() {
+        return {
+          isLoading: false,
+        //   value: document.getElementById("document_url").value.split(","),
+          valueFile: null,
+          uploadFile(file) {
+            try {
+              console.log("uploading file");
+              this.isLoading = true;
+              document
+                .getElementById("file-input")
+                ?.setAttribute("type", "text");
+              document
+                .getElementById("file-input")
+                ?.setAttribute("type", "file");
+
+              const formData = new FormData();
+
+              Array.from(this.valueFile).forEach((f) => {
+                formData.append("file", f);
+              });
+
+              fetch("/api/storage/upload-file", {
+                body: formData,
+                method: "POST",
+              })
+                .then((res) => {
+                  if (res.status >= 400) {
+                    Toastify({
+                      text: "Failed to upload file",
+                      duration: 2000,
+                      style: {
+                        background: "#fff",
+                        color: "red",
+                        border: "1px solid red",
+                      },
+                    }).showToast();
+                    return;
+                  }
+
+                  Toastify({
+                    text: "File has been uploaded",
+                    duration: 2000,
+                    style: {
+                      background: "#fff",
+                      color: "green",
+                      border: "1px solid green",
+                    },
+                  }).showToast();
+                  return res.json();
+                })
+                .then((res) => {
+                //   this.value = [...this.value, res.data.url];
+                  this.isLoading = false;
+                });
+            } catch (e) {
+              this.isLoading = false;
+              console.log("failed to upload file");
+            }
+          },
+        };
+      }
+
+      function handleOnClickAddAttachment() {
+        document.getElementById("file-input")?.click();
+      }
+
+      function revenueConfirmationDetailState() {
+        return {
+          data: [],
+          get getSelectedData() {
+            return this.data.filter((item) => item.selectedCheckbox);
+          },
+          isLoading: true,
+          isError: false,
+          isSubmitting: false,
+          showModalConfirmation: false,
+          form: formState(),
+        //   calculateTotalAmount(item) {
+        //     const taxVatId = document.querySelector("#m_tax_vat_id").value;
+
+        //     if (taxVatId == 15) {
+        //       return (
+        //         item.unit_price * item.qty_1 * item.frequency -
+        //         (item.unit_price * item.qty_1 * item.frequency -
+        //           (item.unit_price * item.qty_1 * item.frequency) / 1.1)
+        //       );
+        //     }
+
+        //     // if (taxVatId == 1) {
+        //     //   return item.unit_price * item.qty_1 * item.frequency;
+        //     // }
+
+        //     return item.unit_price * item.qty_1 * item.frequency;
+        //   },
+        //   get showPpn10Include() {
+        //     return document.querySelector("#m_tax_vat_id").value == 15;
+        //   },
+        //   get ppn10() {
+        //     const selectedData = this.data.filter(
+        //       (item) => item.selectedCheckbox
+        //     );
+        //     let totalAmount = [...selectedData].reduce(
+        //       (total, item) =>
+        //         total + item.unit_price * item.qty_1 * item.frequency,
+        //       0
+        //     );
+
+        //     totalAmount = totalAmount - totalAmount / 1.1;
+
+        //     return {
+        //       linenum: 997,
+        //       activity_flag: this.data[0]?.activity_flag ?? "",
+        //       charge_name: "PPN 10% (INCLUDE)",
+        //       charge_type: this.data[0]?.charge_type ?? "",
+        //       bill_type: this.data[0]?.bill_type ?? "",
+        //       customer_name: this.data[0]?.customer_name ?? "",
+        //       general_arrangement: "",
+        //       frequency: "",
+        //       currency_code: this.data[0]?.currency_code ?? "",
+        //       unit_price: "",
+        //       quantity: "",
+        //       exchange_rate: this.data[0]?.exchange_rate ?? "",
+        //       coa: this.data[0]?.coa ?? "",
+        //       total_amount: totalAmount,
+        //       debit_credit: this.data[0]?.debit_credit ?? "",
+        //       jo_remark: "PPN 10% (INCLUDE)",
+        //     };
+        //   },
+        //   get totalPiutang() {
+        //     const selectedData = this.data.filter(
+        //       (item) => item.selectedCheckbox
+        //     );
+
+        //     let totalAmount = [...selectedData].reduce(
+        //       (total, item) => total + this.calculateTotalAmount(item),
+        //       0
+        //     );
+
+        //     const taxVatId = document.querySelector("#m_tax_vat_id").value;
+
+        //     if (taxVatId == 15) {
+        //       totalAmount += parseFloat(this.ppn10.total_amount);
+        //     }
+
+        //     return {
+        //       linenum: 999,
+        //       activity_flag: this.data[0]?.activity_flag ?? "",
+        //       charge_name: "TOTAL PIUTANG",
+        //       charge_type: this.data[0]?.charge_type ?? "",
+        //       bill_type: this.data[0]?.bill_type ?? "",
+        //       customer_name: this.data[0]?.customer_name ?? "",
+        //       general_arrangement: "",
+        //       frequency: "",
+        //       currency_code: this.data[0]?.currency_code ?? "",
+        //       unit_price: "",
+        //       quantity: "",
+        //       exchange_rate: this.data[0]?.exchange_rate ?? "",
+        //       coa: this.data[0]?.coa ?? "",
+        //       total_amount: totalAmount,
+        //       debit_credit: this.data[0]?.debit_credit ?? "",
+        //       jo_remark: "TOTAL PIUTANG",
+        //     };
+        //   },
+          fetchData() {
+            const dependency_id = "t_quotation_id";
+            const dependency_value = 
+              document.querySelector("#id").value;
+            // const id_query = 2371;
+            const id_query = 2114;
+            const page = 1;
+            const body = {
+              dependency_id,
+              dependency_value,
+              id_query,
+              page,
+            };
+            const url = "/api/getqueryvalues";
+
+            this.isError = false;
+            this.isLoading = true;
+
+            fetch(url, {
+              method: "POST",
+              body: JSON.stringify(body),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            })
+              .then((res) => res.json())
+              .then((res) => {
+                console.log(res.data);
+                this.data = res.data.map((item) => ({
+                  ...item,
+                  selectedCheckbox: false,
+                }));
+              })
+              .catch((err) => {
+                this.isError = true;
+              });
+          },
+        //   handleOnFinish() {
+        //     this.revenueConfirmationDetailState.isSubmitting = true;
+        //     try {
+        //       const idApi = 1098;
+        //       const dtos = [];
+        //       const selectedData =
+        //         this.revenueConfirmationDetailState.data.filter(
+        //           (item) => item.selectedCheckbox
+        //         );
+
+        //       const taxVatId = document.querySelector("#m_tax_vat_id").value;
+        //       const branchId = document.querySelector("#m_branch_id").value;
+        //       const revenueId = document.querySelector("#revenue_id").value;
+
+        //       selectedData.forEach((item) => {
+        //         const dto = {
+        //           "code<auto-numbering>": 162,
+        //           revenue_id: revenueId,
+        //           document_url:
+        //             this.revenueConfirmationDetailState.form.value.join(","),
+        //           m_branch_id: branchId,
+        //           id: item.id,
+        //           unit_price: item.unit_price,
+        //           m_customer_bill_id: item.m_customer_bill_id,
+        //           m_tax_vat_id: taxVatId,
+        //           jo_remark: item.jo_remark,
+        //         };
+        //         dtos.push(dto);
+        //       });
+
+        //       fetch("/api/global-api-post-multiple-tunnel?id_api=1098", {
+        //         method: "POST",
+        //         body: JSON.stringify(dtos),
+        //         headers: {
+        //           "Content-Type": "application/json",
+        //         },
+        //       })
+        //         .then((res) => {
+        //           if (res.status >= 400) {
+        //             throw res.json();
+        //           }
+        //           return res.json();
+        //         })
+        //         .then((res) => {
+        //           const message =
+        //             res.data[0]?.message ?? "Revenue has been submitted";
+        //           this.revenueConfirmationDetailState.fetchData();
+        //           Toastify({
+        //             text: message,
+        //             duration: 2000,
+        //             style: {
+        //               background: "#fff",
+        //               color: "green",
+        //               border: "1px solid green",
+        //             },
+        //           }).showToast();
+        //           window.location.reload();
+        //         })
+        //         .catch((err) => {
+        //           Toastify({
+        //             text: "Failed to submit revenue",
+        //             duration: 2000,
+        //             style: {
+        //               background: "#fff",
+        //               color: "red",
+        //               border: "1px solid red",
+        //             },
+        //           }).showToast();
+        //         });
+        //     } catch (err) {
+        //       Toastify({
+        //         text: "Failed to submit revenue",
+        //         duration: 2000,
+        //         style: {
+        //           background: "#fff",
+        //           color: "red",
+        //           border: "1px solid red",
+        //         },
+        //       }).showToast();
+        //     } finally {
+        //       this.revenueConfirmationDetailState.isSubmitting = false;
+        //     }
+        //   },
+        };
+      }
+
+      function appState() {
+        return {
+          revenueConfirmationDetailState: revenueConfirmationDetailState(),
+        };
+      }
+    </script>
+    <div
+      x-data="appState()"
+      x-init="revenueConfirmationDetailState.fetchData()"
+    >
+      <!-- table -->
+      <div class="w-full">
+        <div class="border-r border-l border-b rounded-lg mt-5 overflow-x-auto">
+          <table class="w-full whitespace-nowrap table-auto">
+            <thead>
+              <tr
+                class="focus:outline-none h-16 border border-gray-100 rounded"
+              >
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  <input type="checkbox" disabled />
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  No
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Actvity Flag
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Charge
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Bill Type
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Charge Type
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Currency
+                </th>
+                <!-- <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Customer Name
+                </th> -->
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  General Arrangement
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Frequency
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Qty
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  UOM
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Unit Price
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Deal Amount
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  VAT Tax
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  WHT Tax
+                </th>
+                <!-- <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Rate
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Skada
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Total Amount
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  DK
+                </th> -->
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Remark
+                </th>
+                <th
+                  class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left"
+                >
+                  Additional Info
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <template
+                x-for="(item, index) in revenueConfirmationDetailState.data"
+              >
+                <tr class="p-5 mt-5">
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <input type="checkbox" x-model="item.selectedCheckbox" />
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <p x-text="index + 1"></p>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div class="text-center">
+                      <p x-text="item.activity_flag"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.charge_name"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.bill_type"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.charge_type"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.currency_code"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.general_arrangement"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.frequency"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.qty_1"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.muom_1"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.unit_price"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <input type="number" x-model="item.deal_amount" />
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.vat_name"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.wht_name"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.remark"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.additional_info"></p>
+                    </div>
+                  </td>
+                  <!-- <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-right text-blueGray-700"
+                  >
+                    <div>
+                      <p
+                        x-text="revenueConfirmationDetailState.calculateTotalAmount(item).toLocaleString()"
+                      ></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <p x-text="item.debit_credit"></p>
+                    </div>
+                  </td>
+                  <td
+                    class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                  >
+                    <div>
+                      <input type="text" x-model="item.jo_remark" />
+                    </div>
+                  </td> -->
+                </tr>
+              </template>
+
+              <!-- ppn 10% -->
+              <!-- <tr
+                x-show="revenueConfirmationDetailState.showPpn10Include"
+                class="p-5 mt-5"
+              >
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <input type="checkbox" disabled />
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <p
+                    x-text="revenueConfirmationDetailState.data.length + 1"
+                  ></p>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div class="text-center">
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.linenum"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.charge_name"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.charge_type"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.bill_type"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.customer_name"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.general_arrangement"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.frequency"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.currency_code"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div></div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p x-text="revenueConfirmationDetailState.ppn10.qty_1"></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.exchange_rate"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p x-text="revenueConfirmationDetailState.ppn10.coa"></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-right text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.total_amount.toLocaleString()"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.ppn10.debit_credit"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <input
+                      type="text"
+                      x-model="revenueConfirmationDetailState.ppn10.jo_remark"
+                    />
+                  </div>
+                </td>
+              </tr> -->
+
+              <!-- total piutang -->
+              <!-- <tr class="p-5 mt-5">
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <input type="checkbox" disabled />
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <p
+                    x-text="revenueConfirmationDetailState.data.length + 1"
+                  ></p>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div class="text-center">
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.linenum"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.charge_name"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.charge_type"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.bill_type"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.customer_name"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.general_arrangement"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.frequency"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.currency_code"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <input
+                      type="number"
+                      x-model="revenueConfirmationDetailState.totalPiutang.unit_price"
+                      class="p-2"
+                    />
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.qty_1"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.exchange_rate"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.coa"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-right text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.total_amount.toLocaleString()"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <p
+                      x-text="revenueConfirmationDetailState.totalPiutang.debit_credit"
+                    ></p>
+                  </div>
+                </td>
+                <td
+                  class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left text-blueGray-700"
+                >
+                  <div>
+                    <input
+                      type="text"
+                      x-model="revenueConfirmationDetailState.totalPiutang.jo_remark"
+                    />
+                  </div>
+                </td>
+              </tr> -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div
+        @keydown.escape="revenueConfirmationDetailState.showModalConfirmation = false"
+      >
+        <!-- Trigger for Modal -->
+        <button
+          class="bg-blue-500 hover:bg-blue-700 disabled:bg-blue-200 disabled:cursor-not-allowed text-white py-1 px-4 rounded-md mt-5 transition-all delay-100"
+          type="button"
+          @click="revenueConfirmationDetailState.showModalConfirmation = true"
+          x-bind:disabled="revenueConfirmationDetailState.getSelectedData.length === 0"
+        >
+          Confirm Revenue
+        </button>
+
+        <!-- Modal -->
+        <div
+          class="fixed inset-0 z-30 flex items-center justify-center overflow-auto bg-black bg-opacity-50"
+          x-show="revenueConfirmationDetailState.showModalConfirmation"
+        >
+          <!-- Modal inner -->
+          <div
+            class="max-w-3xl px-6 py-4 mx-auto text-left bg-white rounded shadow-lg"
+            @click.away="revenueConfirmationDetailState.showModalConfirmation = false"
+            x-transition:enter="motion-safe:ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-90"
+            x-transition:enter-end="opacity-100 scale-100"
+          >
+            <!-- Title / Close-->
+            <div class="flex items-center justify-between w-full">
+              <h5 class="mr-3 text-black max-w-none">Confirm Revenue</h5>
+
+              <button
+                type="button"
+                class="z-50 cursor-pointer"
+                @click="revenueConfirmationDetailState.showModalConfirmation = false"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- content -->
+            <div>
+              <div class="flex justify-between items-center w-80 mt-5">
+                <p>Attachment</p>
+                <button
+                  class="border rounded-md w-10 h-10"
+                  @click="handleOnClickAddAttachment"
+                  type="button"
+                  x-bind:disabled="revenueConfirmationDetailState.data.filter((item) => item.selectedCheckbox).length === 0"
+                >
+                  +
+                </button>
+              </div>
+              <input
+                id="file-input"
+                type="file"
+                hidden="true"
+                x-effect="revenueConfirmationDetailState.form.uploadFile(revenueConfirmationDetailState.form.valueFile)"
+                x-ref="attachment"
+                @change="revenueConfirmationDetailState.form.valueFile = $refs.attachment.files"
+                class="hidden"
+              />
+              <div class="flex flex-col gap-y-3 mt-3">
+                <template
+                  x-for="(item, index) in revenueConfirmationDetailState.form.value"
+                >
+                  <div
+                    class="flex justify-between items-center py-2 px-1 rounded-md border-blue-500 text-blue-500 border w-full"
+                  >
+                    <p x-text="item.split('/')[item.split('/').length - 1]"></p>
+                    <i
+                      class="fa-solid fa-trash cursor-pointer text-rose-500"
+                      @click="revenueConfirmationDetailState.form.value = revenueConfirmationDetailState.form.value.filter((v) => v !== item)"
+                    ></i>
+                  </div>
+                </template>
+                <div class="mt-3 w-full flex justify-end items-center gap-x-3">
+                  <button
+                    class="border px-3 py-1 rounded-md border-blue-500 text-blue-500"
+                    type="button"
+                    @click="revenueConfirmationDetailState.showModalConfirmation = false"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    class="text-white bg-blue-500 disabled:bg-blue-300 px-3 py-1 rounded-md flex gap-x-2 items-center"
+                    type="button"
+                    @click="revenueConfirmationDetailState.handleOnFinish"
+                    x-bind:disabled="revenueConfirmationDetailState.isSubmitting"
+                    
+                  >
+                    <div
+                      x-show="revenueConfirmationDetailState.isSubmitting"
+                    >
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
+                          opacity=".25"
+                        />
+                        <circle cx="12" cy="2.5" r="1.5">
+                          <animateTransform
+                            attributeName="transform"
+                            type="rotate"
+                            dur="0.75s"
+                            values="0 12 12;360 12 12"
+                            repeatCount="indefinite"
+                          />
+                        </circle>
+                      </svg>
+                    </div>
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
